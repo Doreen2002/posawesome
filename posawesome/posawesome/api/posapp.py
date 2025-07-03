@@ -259,6 +259,13 @@ def get_items(
             condition += " AND has_variants = 0"
 
         result = []
+        allowed_companies = frappe.db.get_list(
+            "User Permission",
+            filters={"user": frappe.session.user, "allow": "Company"},
+            fields=["for_value"]
+        )
+        allowed_company_names = [c["for_value"] for c in allowed_companies]
+        
 
         items_data = frappe.db.sql(
             """
@@ -295,6 +302,11 @@ def get_items(
         )
 
         if items_data:
+            if allowed_company_names and frappe.session.user != "Administrator":
+                items_data = [
+                    val for val in items_data
+                    if frappe.db.exists("Allowed Companies", {"parent": val.item_code, "company": ["in", allowed_company_names]})
+                ]
             items = [d.item_code for d in items_data]
             item_prices_data = frappe.get_all(
                 "Item Price",
@@ -523,6 +535,13 @@ def get_customer_names(pos_profile):
         pos_profile = json.loads(pos_profile)
         condition = ""
         condition += get_customer_group_condition(pos_profile)
+        # List of allowed company names
+        allowed_companies = frappe.db.get_list(
+            "User Permission",
+            filters={"user": frappe.session.user, "allow": "Company"},
+            fields=["for_value"]
+        )
+        allowed_company_names = [c["for_value"] for c in allowed_companies]
         customers = frappe.db.sql(
             """
             SELECT name, mobile_no, email_id, tax_id, customer_name, primary_address
@@ -534,6 +553,13 @@ def get_customer_names(pos_profile):
             ),
             as_dict=1,
         )
+        if allowed_company_names and frappe.session.user != "Administrator":
+            customers = [
+                val for val in customers
+                if frappe.db.exists("Allowed Companies", {"parent": val.name, "company": ["in", allowed_company_names]})
+            ]
+
+
         return customers
 
     if _pos_profile.get("posa_use_server_cache"):
