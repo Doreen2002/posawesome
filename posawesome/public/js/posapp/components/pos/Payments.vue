@@ -946,6 +946,7 @@ export default {
           vm.addresses = [];
           vm.eventBus.emit("clear_invoice");
           vm.eventBus.emit("reset_posting_date");
+          vm.eventBus.emit("set_all_items");
           vm.back_to_invoice();
         }
       });
