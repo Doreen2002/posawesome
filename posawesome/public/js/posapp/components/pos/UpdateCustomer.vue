@@ -159,7 +159,7 @@ export default {
     mobile_no: '',
     address_line1: '',
     city: '',
-    country: 'Pakistan',
+    country: 'Nepal',
     email_id: '',
     referral_code: '',
     birthday: '',
@@ -318,7 +318,7 @@ export default {
       this.mobile_no = '';
       this.address_line1 = '';
       this.city = '';
-      this.country = 'Pakistan';
+      this.country = 'Nepal';
       this.email_id = '';
       this.referral_code = '';
       this.birthday = '';
@@ -473,7 +473,8 @@ export default {
         city: this.city,
         country: this.country,
         email_id: this.email_id,
-        referral_code: this.referral_code,
+        //referral_code: this.referral_code,
+        referral_code: this.referral_code && this.referral_code.trim() !== '' ? this.referral_code : vm.pos_profile.company,
         birthday: formatted_birthday || this.birthday,
         customer_group: this.group,
         territory: this.territory,
@@ -565,7 +566,7 @@ export default {
         this.customer_id = data.name;
 		this.address_line1 = data.address_line1 || "";
 		this.city = data.city || "";
-		this.country = data.country || "Pakistan";
+		this.country = data.country || "Nepal";
         this.tax_id = data.tax_id;
         this.mobile_no = data.mobile_no;
         this.email_id = data.email_id;
