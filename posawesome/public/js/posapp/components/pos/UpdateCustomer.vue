@@ -473,7 +473,7 @@ export default {
         city: this.city,
         country: this.country,
         email_id: this.email_id,
-        referral_code: this.referral_code,
+        referral_code: this.referral_code || null,
         birthday: formatted_birthday || this.birthday,
         customer_group: this.group,
         territory: this.territory,
