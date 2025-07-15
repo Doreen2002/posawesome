@@ -154,18 +154,18 @@ export default {
       const vm = this;
       await initPromise;
 
-      // Load cached data first for offline usage
-      const cached = getOpeningDialogStorage();
-      if (cached) {
-        try {
-          vm.companies = cached.companies.map(c => c.name);
-          vm.pos_profiles_data = cached.pos_profiles_data || [];
-          vm.payments_method_data = cached.payments_method || [];
-          vm.company = vm.companies[0] || '';
-        } catch (e) {
-          console.error('Failed to parse opening dialog cache', e);
-        }
-      }
+      // // Load cached data first for offline usage
+      // const cached = getOpeningDialogStorage();
+      // if (cached) {
+      //   try {
+      //     vm.companies = cached.companies.map(c => c.name);
+      //     vm.pos_profiles_data = cached.pos_profiles_data || [];
+      //     vm.payments_method_data = cached.payments_method || [];
+      //     vm.company = vm.companies[0] || '';
+      //   } catch (e) {
+      //     console.error('Failed to parse opening dialog cache', e);
+      //   }
+      // }
 
       frappe.call({
         method: 'posawesome.posawesome.api.posapp.get_opening_dialog_data',

@@ -478,7 +478,8 @@ export default {
         customer_group: this.group,
         territory: this.territory,
         customer_type: this.customer_type,
-        gender: this.gender
+        gender: this.gender,
+        //posa_referral_company: this.referral_code ? vm.pos_profile.company : null
       };
       const apiArgs = {
         ...args,
