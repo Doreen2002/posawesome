@@ -680,8 +680,8 @@ export default {
         }
 
         // Always recalculate final amounts
-        item.amount = this.flt(item.qty * item.rate, this.currency_precision);
-        item.base_amount = this.flt(item.qty * item.base_rate, this.currency_precision);
+        item.amount = this.flt(item.qty * item.rate , this.currency_precision);
+        item.base_amount = this.flt(item.qty * item.base_rate , this.currency_precision);
 
         console.log(`Updated rates for ${item.item_code}:`, {
           price_list_rate: item.price_list_rate,
@@ -692,6 +692,7 @@ export default {
           base_discount: item.base_discount_amount,
           amount: item.amount,
           base_amount: item.base_amount,
+          
         });
 
         // Apply any other pricing rules if needed
@@ -799,7 +800,9 @@ export default {
         this.remove_item(item);
       }
       this.calc_stock_qty(item, item.qty);
-      this.$forceUpdate();
+      this.$forceUpdate(
+        
+      );
     },
 
     // Decrease quantity of an item (handles return logic)

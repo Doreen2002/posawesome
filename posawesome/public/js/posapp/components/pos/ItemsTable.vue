@@ -31,8 +31,9 @@
 
       <template v-slot:item.amount="{ item }">
         <div class="currency-display">
+        
           <span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
-          <span class="amount-value">{{ formatCurrency(item.qty * item.rate) }}</span>
+          <span class="amount-value">{{ formatCurrency(item.qty * item.rate + item.tax_amount) }}</span>
         </div>
       </template>
 
@@ -177,11 +178,39 @@
                   <v-text-field density="compact" variant="outlined" color="primary" :label="frappe._('Stock UOM')"
                     :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field" hide-details v-model="item.stock_uom" disabled></v-text-field>
                 </div>
+
                 <div class="form-field" v-if="item.posa_offer_applied">
                   <v-checkbox density="compact" :label="frappe._('Offer Applied')" v-model="item.posa_offer_applied"
                     readonly hide-details class="mt-1"></v-checkbox>
                 </div>
               </div>
+
+              <!-- Taxable row of fields -->
+                <div class="form-section">
+                <div class="form-row">
+                  
+                  <div class="form-field">
+                    <v-checkbox 
+                      density="compact" 
+                      :label="frappe._('Taxable')" 
+                      v-model="item.taxable"
+                      
+                      hide-details 
+                      class="mt-1">
+                    </v-checkbox>
+                  </div>
+
+                  <div class="form-field">
+                    <div class="currency-display">
+                      
+                      <span class="currency-symbol"> <span class="amount-value">Tax Rate</span> {{ currencySymbol(displayCurrency) }}</span>
+                      <span class="amount-value">  {{ formatCurrency(item.tax_amount) }}</span>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
 
               <!-- Serial Number Section -->
               <div class="form-section" v-if="item.has_serial_no == 1 || item.serial_no">

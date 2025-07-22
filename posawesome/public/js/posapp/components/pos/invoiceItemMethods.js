@@ -1480,10 +1480,16 @@ export default {
 
         if (response?.message) {
           items.forEach((item) => {
+
             const updated_item = response.message.find(
               (element) => element.posa_row_id == item.posa_row_id
             );
             if (updated_item) {
+              item.tax_rate = updated_item.tax_rate ;
+              item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
+              item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
+              
+    
               item.actual_qty = updated_item.actual_qty;
               item.serial_no_data = updated_item.serial_no_data;
               item.batch_no_data = updated_item.batch_no_data;
@@ -1491,6 +1497,7 @@ export default {
               item.has_batch_no = updated_item.has_batch_no;
               item.has_serial_no = updated_item.has_serial_no;
             }
+            
           });
         }
       } catch (error) {

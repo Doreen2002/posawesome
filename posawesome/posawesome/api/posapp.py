@@ -198,6 +198,7 @@ def get_items(
         search_serial_no = pos_profile.get("posa_search_serial_no")
         search_batch_no = pos_profile.get("posa_search_batch_no")
         posa_show_template_items = pos_profile.get("posa_show_template_items")
+        
         posa_display_items_in_stock = pos_profile.get("posa_display_items_in_stock")
         search_limit = 0
 
@@ -283,6 +284,7 @@ def get_items(
                 has_batch_no,
                 has_serial_no,
                 max_discount,
+                T.tax_rate as tax_rate,
                 brand
             FROM
                 `tabItem`
@@ -291,6 +293,8 @@ def get_items(
                     AND is_sales_item = 1
                     AND is_fixed_asset = 0
                     {condition}
+            LEFT JOIN Item Tax on T.parent = name
+
             ORDER BY
                 item_name asc
             {limit}
@@ -302,11 +306,13 @@ def get_items(
         )
 
         if items_data:
-            if allowed_company_names and frappe.session.user != "Administrator":
-                items_data = [
-                    val for val in items_data
-                    if frappe.db.exists("Allowed Companies", {"parent": val.item_code, "company": ["in", allowed_company_names]})
-                ]
+            # if allowed_company_names and frappe.session.user != "Administrator":
+            # items_data = [
+            #     val for val in items_data
+            #     if frappe.db.exists("Allowed Companies", {"parent": val.item_code, "company": ["in", allowed_company_names]})
+            # ]
+            # for item in items_data:
+                
             items = [d.item_code for d in items_data]
             item_prices_data = frappe.get_all(
                 "Item Price",
@@ -340,6 +346,7 @@ def get_items(
                         or item_prices.get(item_code).get("None")
                         or {}
                     )
+                
                 item_barcode = frappe.get_all(
                     "Item Barcode",
                     filters={"parent": item_code},
@@ -384,6 +391,7 @@ def get_items(
                     filters={"parent": item_code},
                     fields=["uom", "conversion_factor"],
                 )
+                
                 stock_uom = item.stock_uom
                 if stock_uom and not any(u.get("uom") == stock_uom for u in uoms):
                     uoms.append({"uom": stock_uom, "conversion_factor": 1.0})
@@ -412,6 +420,7 @@ def get_items(
                     row.update(
                         {
                             "rate": item_price.get("price_list_rate") or 0,
+                            
                             "currency": item_price.get("currency")
                             or pos_profile.get("currency"),
                             "item_barcode": item_barcode or [],
@@ -535,13 +544,13 @@ def get_customer_names(pos_profile):
         pos_profile = json.loads(pos_profile)
         condition = ""
         condition += get_customer_group_condition(pos_profile)
-        # List of allowed company names
-        allowed_companies = frappe.db.get_list(
-            "User Permission",
-            filters={"user": frappe.session.user, "allow": "Company"},
-            fields=["for_value"]
-        )
-        allowed_company_names = [c["for_value"] for c in allowed_companies]
+        # # List of allowed company names
+        # allowed_companies = frappe.db.get_list(
+        #     "User Permission",
+        #     filters={"user": frappe.session.user, "allow": "Company"},
+        #     fields=["for_value"]
+        # )
+        # allowed_company_names = [c["for_value"] for c in allowed_companies]
         customers = frappe.db.sql(
             """
             SELECT name, mobile_no, email_id, tax_id, customer_name, primary_address
@@ -553,11 +562,11 @@ def get_customer_names(pos_profile):
             ),
             as_dict=1,
         )
-        if allowed_company_names and frappe.session.user != "Administrator":
-            customers = [
-                val for val in customers
-                if frappe.db.exists("Allowed Companies", {"parent": val.name, "company": ["in", allowed_company_names]})
-            ]
+        # if allowed_company_names and frappe.session.user != "Administrator":
+        #     customers = [
+        #         val for val in customers
+        #         if frappe.db.exists("Allowed Companies", {"parent": val.name, "company": ["in", allowed_company_names]})
+        #     ]
 
 
         return customers
@@ -1139,7 +1148,14 @@ def get_items_details(pos_profile, items_data, price_list=None):
             price_list = pos_profile.get("selling_price_list")
 
         item_codes = [item.get("item_code") for item in items_data]
-
+        for item in items_data:
+            tax_rate = 0
+            item_tax = frappe.db.get_all("Item Tax", filters={"parent":item.get('item_code')}, fields=["item_tax_template"])
+            if item_tax != []:
+                tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
+                if tax_template != []:
+                    tax_rate  = tax_template[0].tax_rate
+            item["tax_rate"] = tax_rate
         item_prices_data = frappe.get_all(
             "Item Price",
             fields=["item_code", "price_list_rate", "currency", "uom"],
@@ -1233,7 +1249,7 @@ def get_items_details(pos_profile, items_data, price_list=None):
                         or item_prices.get(item_code).get("None")
                         or {}
                     )
-
+                
                 row = {}
                 row.update(item)
                 row.update(

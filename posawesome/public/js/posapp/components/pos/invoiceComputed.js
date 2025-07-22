@@ -14,7 +14,7 @@ export default {
       this.items.forEach((item) => {
         // For returns, use absolute value for correct calculation
         const qty = this.isReturnInvoice ? Math.abs(flt(item.qty)) : flt(item.qty);
-        const rate = flt(item.rate);
+        const rate = flt(item.rate) ;
         sum += qty * rate;
       });
       return this.flt(sum, this.currency_precision);
@@ -26,8 +26,8 @@ export default {
       this.items.forEach((item) => {
         // For returns, use absolute value for correct calculation
         const qty = this.isReturnInvoice ? Math.abs(flt(item.qty)) : flt(item.qty);
-        const rate = flt(item.rate);
-        sum += qty * rate;
+        const rate = flt(item.rate) ;
+        sum += (qty * rate) + item.tax_amount || 0;
       });
 
       // Subtract additional discount
