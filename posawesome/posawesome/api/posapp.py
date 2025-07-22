@@ -284,7 +284,7 @@ def get_items(
                 has_batch_no,
                 has_serial_no,
                 max_discount,
-                T.tax_rate as tax_rate,
+               
                 brand
             FROM
                 `tabItem`
@@ -293,7 +293,7 @@ def get_items(
                     AND is_sales_item = 1
                     AND is_fixed_asset = 0
                     {condition}
-            LEFT JOIN Item Tax on T.parent = name
+            
 
             ORDER BY
                 item_name asc
