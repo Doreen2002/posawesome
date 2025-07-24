@@ -739,6 +739,7 @@ export default {
         this.eventBus.emit("add_item", item);
         this.qty = 1;
       }
+      this.$forceUpdate();
     },
     enter_event() {
       let match = false;
