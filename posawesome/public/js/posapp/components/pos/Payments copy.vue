@@ -41,74 +41,44 @@
 
         <v-divider></v-divider>
 
-        <!-- Payment Tabs -->
-        <v-tabs v-model="activePaymentTab" :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="mb-2">
-          <v-tab value="cash">Cash/Card</v-tab>
-          <v-tab value="qr">QR Payments</v-tab>
-        </v-tabs>
-
         <!-- Payment Inputs (All Payment Methods) -->
-        <v-window v-model="activePaymentTab">
-          <v-window-item value="cash">
-            <div v-if="is_cashback">
-              <v-row class="payments px-1 py-0" v-for="(payment, index) in invoice_doc.payments" :key="payment.name">
-                <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment)">
-                  <v-text-field density="compact" variant="outlined" color="primary"
-                    :label="frappe._(payment.mode_of_payment)" :bg-color="isDarkTheme ? '#1E1E1E' : 'white'"
-                    class="dark-field" hide-details :model-value="formatCurrency(payment.amount)"
-                    @change="setFormatedCurrency(payment, 'amount', null, false, $event)" :rules="[
-                      isNumber,
-                      v => !payment.mode_of_payment.toLowerCase().includes('cash') ||
-                        this.is_credit_sale ||
-                        v >= (this.invoice_doc.rounded_total || this.invoice_doc.grand_total) ||
-                        'Cash payment cannot be less than invoice total when credit sale is off'
-                    ]" :prefix="currencySymbol(invoice_doc.currency)" @focus="set_rest_amount(payment.idx)"
-                    :readonly="invoice_doc.is_return"></v-text-field>
-                </v-col>
-                <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment)">
-                  <v-btn block color="primary" theme="dark" @click="set_full_amount(payment.idx)">
-                    {{ payment.mode_of_payment }}
-                  </v-btn>
-                </v-col>
-                <!-- M-Pesa Payment Button (if payment is M-Pesa) -->
-                <v-col cols="12" v-if="is_mpesa_c2b_payment(payment)" class="pl-3">
-                  <v-btn block color="success" theme="dark" @click="mpesa_c2b_dialog(payment)">
-                    {{ __("Get Payments") }} {{ payment.mode_of_payment }}
-                  </v-btn>
-                </v-col>
-                <!-- Request Payment for Phone Type -->
-                <v-col cols="3" v-if="payment.type === 'Phone' && payment.amount > 0 && request_payment_field" class="pl-1">
-                  <v-btn block color="success" theme="dark" :disabled="payment.amount === 0"
-                    @click="request_payment(payment)">
-                    {{ __("Request") }}
-                  </v-btn>
-                </v-col>
-              </v-row>
-            </div>
-          </v-window-item>
-          <!-- QR Payments Tab Content -->
-          <v-window-item value="qr">
-            <v-row class="px-1 py-0">
-              <v-col cols="12" class="provider-list">
-                <v-btn
-                  v-for="provider in paymentProviders"
-                  :key="provider.gateway"
-                  block
-                  class="mb-2"
-                  color="primary"
-                  theme="dark"
-                  @click="selectQrProvider(provider.gateway)"
-                >
-                  {{ provider.name }}
-                </v-btn>
-              </v-col>
-              <v-col cols="12" class="qr-code-display" v-if="selectedQrCode">
-                <img :src="selectedQrCode" alt="QR Code" style="max-width: 200px;" />
-                <p>{{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}</p>
-              </v-col>
-            </v-row>
-          </v-window-item>
-        </v-window>
+        <div v-if="is_cashback">
+          <v-row class="payments px-1 py-0" v-for="(payment, index) in invoice_doc.payments" :key="payment.name">
+            <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment)">
+              <v-text-field density="compact" variant="outlined" color="primary"
+                :label="frappe._(payment.mode_of_payment)" :bg-color="isDarkTheme ? '#1E1E1E' : 'white'"
+                class="dark-field" hide-details :model-value="formatCurrency(payment.amount)"
+                @change="setFormatedCurrency(payment, 'amount', null, false, $event)" :rules="[
+                  isNumber,
+                  v => !payment.mode_of_payment.toLowerCase().includes('cash') ||
+                    this.is_credit_sale ||
+                    v >= (this.invoice_doc.rounded_total || this.invoice_doc.grand_total) ||
+                    'Cash payment cannot be less than invoice total when credit sale is off'
+                ]" :prefix="currencySymbol(invoice_doc.currency)" @focus="set_rest_amount(payment.idx)"
+                :readonly="invoice_doc.is_return"></v-text-field>
+            </v-col>
+            <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment)">
+              <v-btn block color="primary" theme="dark" @click="set_full_amount(payment.idx)">
+                {{ payment.mode_of_payment }}
+              </v-btn>
+            </v-col>
+
+            <!-- M-Pesa Payment Button (if payment is M-Pesa) -->
+            <v-col cols="12" v-if="is_mpesa_c2b_payment(payment)" class="pl-3">
+              <v-btn block color="success" theme="dark" @click="mpesa_c2b_dialog(payment)">
+                {{ __("Get Payments") }} {{ payment.mode_of_payment }}
+              </v-btn>
+            </v-col>
+
+            <!-- Request Payment for Phone Type -->
+            <v-col cols="3" v-if="payment.type === 'Phone' && payment.amount > 0 && request_payment_field" class="pl-1">
+              <v-btn block color="success" theme="dark" :disabled="payment.amount === 0"
+                @click="request_payment(payment)">
+                {{ __("Request") }}
+              </v-btn>
+            </v-col>
+          </v-row>
+        </div>
 
         <!-- Loyalty Points Redemption -->
         <v-row class="payments px-1 py-0" v-if="invoice_doc && available_points_amount > 0 && !invoice_doc.is_return">
@@ -360,7 +330,6 @@
         </v-col>
       </v-row>
     </v-card>
-
     <!-- Custom Days Dialog -->
     <v-dialog v-model="custom_days_dialog" max-width="300px">
       <v-card>
@@ -384,6 +353,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+
 
     <!-- Phone Payment Dialog -->
     <v-dialog v-model="phone_dialog" max-width="400px">
@@ -411,6 +381,7 @@
     </v-dialog>
   </div>
 </template>
+
 <script>
 // Importing format mixin for currency and utility functions
 import format from "../../format";
@@ -430,17 +401,7 @@ export default {
   mixins: [format],
   data() {
     return {
-      activePaymentTab: 'cash', // Default to Cash/Card tab
-      paymentProviders: [
-        { name: 'Sample', gateway: 'Sample' },
-        { name: 'Khalti', gateway: 'Khalti' },
-        { name: 'Fonepay', gateway: 'Fonepay' },
-        { name: 'NepalPay', gateway: 'NepalPay' },
-      ],
-      selectedQrCode: null,
-      selectedProvider: null,
-      paymentPollInterval: null,
-      loading: false,
+      loading: false, // UI loading state
       pos_profile: "", // POS profile settings
       pos_settings: "", // POS settings
       invoice_doc: "", // Current invoice document
@@ -709,107 +670,6 @@ export default {
     },
   },
   methods: {
-   selectQrProvider(gateway) {
-      this.selectedProvider = gateway;
-      frappe.call({
-        method: 'posawesome.posawesome.api.qr_payment.get_qr_code',
-        args: {
-          gateway,
-          amount: this.invoice_doc.grand_total,
-          pos_invoice: this.invoice_doc.name,
-        },
-        callback: (r) => {
-          if (r.message && r.message.qr_code_url) {
-            this.selectedQrCode = r.message.qr_code_url;
-            this.pollPaymentStatus(gateway, r.message.transaction_id);
-          } else {
-            frappe.msgprint(__('Failed to generate QR code for ') + gateway);
-          }
-        },
-        error: (error) => {
-          frappe.msgprint(__('Error: ') + error.message);
-        }
-      });
-    },
-    pollPaymentStatus(gateway, transaction_id) {
-      if (this.paymentPollInterval) clearInterval(this.paymentPollInterval);
-      this.paymentPollInterval = setInterval(() => {
-        frappe.call({
-          method: 'posawesome.posawesome.api.qr_payment.check_payment_status',
-          args: {
-            gateway,
-            transaction_id,
-          },
-          callback: (r) => {
-            if (r.message && r.message.status === 'completed') {
-              clearInterval(this.paymentPollInterval);
-              this.handlePaymentConfirmed(gateway);
-            }
-          },
-          error: (error) => {
-            frappe.log_error('Payment status check failed: ' + error.message);
-          }
-        });
-      }, 5000);
-    },
-    handlePaymentConfirmed(provider) {
-      try {
-        if (isOffline()) {
-          saveOfflineInvoice({
-            data: {
-              qr_payment_provider: provider,
-              qr_payment_amount: this.invoice_doc.grand_total,
-              is_paid: 1,
-            },
-            invoice: this.invoice_doc,
-          });
-          this.eventBus.emit("pending_invoices_changed", getPendingOfflineInvoiceCount());
-          this.eventBus.emit("show_message", { title: __("QR Payment saved offline via ") + provider, color: "warning" });
-          this.back_to_invoice();
-          return;
-        }
-        frappe.call({
-          method: 'frappe.client.set_value',
-          args: {
-            doctype: 'POS Invoice',
-            name: this.invoice_doc.name,
-            fieldname: 'is_paid',
-            value: 1,
-          },
-          callback: () => {
-            frappe.call({
-              method: 'frappe.client.insert',
-              args: {
-                doc: {
-                  doctype: 'Sales Invoice Payment',
-                  mode_of_payment: provider,
-                  amount: this.invoice_doc.grand_total,
-                  owner: frappe.session.user,
-                  sales_invoice: this.invoice_doc.name,
-                },
-              },
-              callback: () => {
-                this.eventBus.emit("show_message", { title: __("POS Invoice updated as paid via ") + provider, color: "success" });
-                this.back_to_invoice();
-              },
-              error: (error) => {
-                this.eventBus.emit("show_message", { title: __("Error updating invoice: ") + error.message, color: "error" });
-              }
-            });
-          },
-          error: (error) => {
-            this.eventBus.emit("show_message", { title: __("Error updating invoice: ") + error.message, color: "error" });
-          }
-        });
-      } catch (error) {
-        this.eventBus.emit("show_message", { title: __("Error updating invoice: ") + error.message, color: "error" });
-      } finally {
-        this.selectedQrCode = null;
-        this.selectedProvider = null;
-        this.activePaymentTab = 'cash';
-      }
-    },
-
     // Go back to invoice view and reset customer readonly
     back_to_invoice() {
       this.eventBus.emit("show_payment", "false");
