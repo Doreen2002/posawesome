@@ -2387,7 +2387,7 @@ def search_serial_or_batch_or_barcode_number(search_value, search_serial_no):
     # search barcode no
     barcode_data = frappe.db.get_value(
         "Item Barcode",
-        {"barcode": search_value},
+        filters={ "barcode": ["like", f"%{search_value}%"] },
         ["barcode", "parent as item_code"],
         as_dict=True,
     )
