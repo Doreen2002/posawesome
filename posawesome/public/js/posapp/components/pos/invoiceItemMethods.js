@@ -14,6 +14,9 @@ export default {
     },
 
     add_item(item) {
+      console.log("addded item", item);
+      
+      
       if (!item.uom) {
         item.uom = item.stock_uom;
       }
@@ -43,6 +46,7 @@ export default {
       }
 
       let new_item;
+      
       if (index === -1 || this.new_line) {
         new_item = this.get_new_item(item);
         // Handle serial number logic
@@ -139,6 +143,8 @@ export default {
       new_item.discount_percentage = 0;
       new_item.discount_amount_per_item = 0;
       new_item.price_list_rate = item.rate;
+      new_item.tax_rate = item.tax_rate || 0; 
+      new_item.taxable = item.taxable || 0; 
 
       // Setup base rates properly for multi-currency
       if (this.selected_currency !== this.pos_profile.currency) {
@@ -169,6 +175,7 @@ export default {
       new_item.is_free_item = 0;
       new_item.posa_notes = "";
       new_item.posa_delivery_date = "";
+      
       new_item.posa_row_id = this.makeid(20);
       // Expand row if batch/serial required
       if (
@@ -1302,6 +1309,7 @@ export default {
 
           // Force update to reflect changes
           this.$forceUpdate();
+          
         }
 
         // Ensure total amount is negative
@@ -1488,8 +1496,6 @@ export default {
               item.tax_rate = updated_item.tax_rate ;
               item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
               item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
-              
-    
               item.actual_qty = updated_item.actual_qty;
               item.serial_no_data = updated_item.serial_no_data;
               item.batch_no_data = updated_item.batch_no_data;
@@ -1555,6 +1561,7 @@ export default {
         callback: function (r) {
           debugger;
           if (r.message) {
+            console.log("item detail", r.message);
             const data = r.message;
             if (data.batch_no_data) {
               item.batch_no_data = data.batch_no_data;
@@ -1647,6 +1654,10 @@ export default {
             item.stock_uom = data.stock_uom;
             item.has_serial_no = data.has_serial_no;
             item.has_batch_no = data.has_batch_no;
+            item.tax_rate = data.tax_rate || 0; 
+            item.taxable = data.tax_rate > 0 ? 1 : 0;
+            item.tax_amount = (item.rate * item.qty) * (item.tax_rate / 100);
+           
 
             // Calculate final amount
             item.amount = vm.flt(item.qty * item.rate, vm.currency_precision);
@@ -1952,6 +1963,7 @@ export default {
 
     // Update UOM (unit of measure) for an item and recalculate prices
     calc_uom(item, value) {
+      
       const new_uom = item.item_uoms.find((element) => element.uom == value);
       if (!new_uom) {
         this.eventBus.emit("show_message", {

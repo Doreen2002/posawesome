@@ -137,10 +137,10 @@ def update_opening_shift_data(data, pos_profile):
     data["stock_settings"] = {}
     data["stock_settings"].update({"allow_negative_stock": allow_negative_stock})
 
-
+from frappe import as_json
 @frappe.whitelist()
 def get_items(
-    pos_profile,
+    pos_profile=None,
     price_list=None,
     item_group="",
     search_value="",
@@ -148,6 +148,16 @@ def get_items(
     limit=None,
     offset=None,
 ):
+    if not pos_profile:
+        pos_profile_parent = frappe.db.get_value(
+            "POS Profile User",
+            {"user": frappe.session.user},
+            "parent",
+           
+        )
+        pos_profile_doc = frappe.get_doc("POS Profile", pos_profile_parent)
+        pos_profile = as_json(pos_profile_doc)
+        # return frappe.throw(f"{pos_profile}")
     _pos_profile = json.loads(pos_profile)
     use_price_list = _pos_profile.get("posa_use_server_cache")
 
@@ -266,6 +276,9 @@ def get_items(
             fields=["for_value"]
         )
         allowed_company_names = [c["for_value"] for c in allowed_companies]
+        tax_rate = 0
+        taxable = 0
+        
         
 
         items_data = frappe.db.sql(
@@ -281,6 +294,8 @@ def get_items(
                 variant_of,
                 item_group,
                 idx as idx,
+                {tax_rate} as tax_rate,
+                {taxable} as taxable,
                 has_batch_no,
                 has_serial_no,
                 max_discount,
@@ -299,6 +314,8 @@ def get_items(
                 item_name asc
             {limit}
                 """.format(
+                tax_rate=tax_rate,
+                taxable=1 if tax_rate > 0 else 0,
                 condition=condition,
                 limit=limit_clause
             ),
@@ -339,6 +356,13 @@ def get_items(
 
             for item in items_data:
                 item_code = item.item_code
+                item_tax = frappe.db.get_all("Item Tax", filters={"parent":item_code}, fields=["item_tax_template"])
+                if item_tax != []:
+                    tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
+                    if tax_template != []:
+                        tax_rate  = tax_template[0].tax_rate
+                item["tax_rate"] = tax_rate
+                item["taxable"] = 1 if tax_rate > 0 else 0    
                 item_price = {}
                 if item_prices.get(item_code):
                     item_price = (
@@ -1156,6 +1180,7 @@ def get_items_details(pos_profile, items_data, price_list=None):
                 if tax_template != []:
                     tax_rate  = tax_template[0].tax_rate
             item["tax_rate"] = tax_rate
+            item["taxable"] = 1 if tax_rate > 0 else 0
         item_prices_data = frappe.get_all(
             "Item Price",
             fields=["item_code", "price_list_rate", "currency", "uom"],
@@ -1334,6 +1359,14 @@ def get_item_detail(item, doc=None, warehouse=None, price_list=None):
             uoms.append({"uom": stock_uom, "conversion_factor": 1.0})
     
     res["item_uoms"] = uoms
+    tax_rate = 0
+    item_tax = frappe.db.get_all("Item Tax", filters={"parent":item.get('item_code')}, fields=["item_tax_template"])
+    if item_tax != []:
+        tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
+        if tax_template != []:
+            tax_rate  = tax_template[0].tax_rate
+    res["tax_rate"] = tax_rate
+    res["taxable"] = 1 if tax_rate > 0 else 0
     
     return res
 
