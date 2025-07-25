@@ -796,6 +796,7 @@ export default {
     add_one(item) {
       // Increase quantity, return items remain negative
       item.qty++;
+      item.tax_amount = (item.tax_amount || 0) + (item.rate * item.tax_rate / 100);
       if (item.qty == 0) {
         this.remove_item(item);
       }
@@ -809,6 +810,7 @@ export default {
     subtract_one(item) {
       // Decrease quantity, return items remain negative
       item.qty--;
+      item.tax_amount = (item.tax_amount || 0) - (item.rate * item.tax_rate / 100);
       if (item.qty == 0) {
         this.remove_item(item);
       }
