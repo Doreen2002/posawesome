@@ -16,6 +16,8 @@ export default {
         const qty = this.isReturnInvoice ? Math.abs(flt(item.qty)) : flt(item.qty);
         const rate = flt(item.rate) ;
         sum += qty * rate + (item.tax_amount || 0);
+        this.invoice_doc.total_taxes_and_charges = (this.invoice_doc.total_taxes_and_charges || 0) + (item.tax_amount || 0);
+        
       });
       return this.flt(sum, this.currency_precision);
     },

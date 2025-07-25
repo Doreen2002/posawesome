@@ -189,6 +189,7 @@ export default {
 
     // Reset all invoice fields to default/empty values
     clear_invoice() {
+      
       this.items = [];
       this.posa_offers = [];
       this.expanded = [];
