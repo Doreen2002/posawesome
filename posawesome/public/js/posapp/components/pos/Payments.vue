@@ -48,7 +48,7 @@
         </v-tabs> -->
 
         <!-- Payment Inputs (All Payment Methods) -->
-        <v-window v-model="activePaymentTab" class="px-1 py-0" style="max-height: 60vh; height: 60vh">
+        <v-window v-model="activePaymentTab" class="px-1 py-0" >
           <v-window-item value="cash">
             <div v-if="is_cashback">
               <v-row class="payments px-1 py-0" v-for="(payment, index) in invoice_doc.payments" :key="payment.name">
@@ -101,28 +101,7 @@
             </div>
             
           </v-window-item>
-          <!-- QR Payments Tab Content -->
-          <!-- <v-window-item value="qr">
-            <v-row class="px-1 py-0">
-              <v-col cols="12" class="provider-list">
-                <v-btn
-                  v-for="provider in paymentProviders"
-                  :key="provider.gateway"
-                  block
-                  class="mb-2"
-                  color="primary"
-                  theme="dark"
-                  @click="selectQrProvider(provider.gateway)"
-                >
-                  {{ provider.name }}
-                </v-btn>
-              </v-col>
-              <v-col cols="12" class="qr-code-display" v-if="selectedQrCode">
-                <img :src="selectedQrCode" alt="QR Code" style="max-width: 200px;" />
-                <p>{{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}</p>
-              </v-col>
-            </v-row>
-          </v-window-item> -->
+  
 
         </v-window> 
 
@@ -353,13 +332,31 @@
           </v-col>
         </v-row>
 
-        <v-row>
+       
                <!--scan to pay via QR Code-->
-               <v-col cols="12" class="qr-code-display" v-if="selectedQrCode">
-                <img :src="selectedQrCode" alt="QR Code" style="max-width: 200px;" />
-                <p>{{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}</p>
-              </v-col>
-              </v-row>
+               <v-dialog v-model="qrDialog" max-width="400px">
+                <v-card>
+                  <v-card-title class="text-h6">
+                    {{ __('Scan to Pay') }}
+                  </v-card-title>
+
+                  <v-card-text class="text-center">
+                    <div v-if="selectedQrCode">
+                      <img :src="selectedQrCode" alt="QR Code" style="max-width: 200px;" />
+                      <p class="mt-4">
+                        {{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}
+                      </p>
+                    </div>
+                  </v-card-text>
+
+                  <v-card-actions class="justify-end">
+                    <v-btn color="primary" text @click="qrDialog = false">
+                      {{ __('Close') }}
+                    </v-btn>
+                  </v-card-actions>
+                </v-card>
+              </v-dialog>
+
       </div>
     </v-card>
 
@@ -462,6 +459,7 @@ export default {
         { name: 'NepalPay', gateway: 'NepalPay' },
       ],
       selectedQrCode: null,
+      qrDialog: false,
       selectedProvider: null,
       paymentPollInterval: null,
       loading: false,
@@ -746,6 +744,7 @@ export default {
         callback: (r) => {
           if (r.message && r.message.qr_code_url) {
             this.selectedQrCode = r.message.qr_code_url;
+            this.qrDialog = true;
             this.pollPaymentStatus(gateway, r.message.transaction_id);
             return true;
           } else {
