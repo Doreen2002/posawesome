@@ -42,13 +42,13 @@
         <v-divider></v-divider>
 
         <!-- Payment Tabs -->
-        <v-tabs v-model="activePaymentTab" :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="mb-2">
+        <!-- <v-tabs v-model="activePaymentTab" :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="mb-2">
           <v-tab value="cash">Cash/Card</v-tab>
           <v-tab value="qr">QR Payments</v-tab>
-        </v-tabs>
+        </v-tabs> -->
 
         <!-- Payment Inputs (All Payment Methods) -->
-        <v-window v-model="activePaymentTab">
+        <v-window v-model="activePaymentTab" class="px-1 py-0" style="max-height: 60vh; height: 60vh">
           <v-window-item value="cash">
             <div v-if="is_cashback">
               <v-row class="payments px-1 py-0" v-for="(payment, index) in invoice_doc.payments" :key="payment.name">
@@ -65,10 +65,19 @@
                     ]" :prefix="currencySymbol(invoice_doc.currency)" @focus="set_rest_amount(payment.idx)"
                     :readonly="invoice_doc.is_return"></v-text-field>
                 </v-col>
-                <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment)">
-                  <v-btn block color="primary" theme="dark" @click="set_full_amount(payment.idx)">
+                <v-col cols="6" v-if="!is_mpesa_c2b_payment(payment) && !is_qr_code_payment(payment)">
+                  <v-btn block color="primary" theme="dark" @click="selectedQrCode = null; set_full_amount(payment.idx);">
                     {{ payment.mode_of_payment }}
                   </v-btn>
+                  
+                </v-col>
+                <!--QR CODE -->
+                <v-col cols="6" v-if="is_qr_code_payment(payment)">
+                  <v-btn block color="primary" theme="dark" @click="set_full_amount(payment.idx); selectQrProvider(payment.mode_of_payment)">
+                   {{ payment.mode_of_payment }}
+                
+                  </v-btn>
+                  
                 </v-col>
                 <!-- M-Pesa Payment Button (if payment is M-Pesa) -->
                 <v-col cols="12" v-if="is_mpesa_c2b_payment(payment)" class="pl-3">
@@ -76,6 +85,9 @@
                     {{ __("Get Payments") }} {{ payment.mode_of_payment }}
                   </v-btn>
                 </v-col>
+                
+                
+
                 <!-- Request Payment for Phone Type -->
                 <v-col cols="3" v-if="payment.type === 'Phone' && payment.amount > 0 && request_payment_field" class="pl-1">
                   <v-btn block color="success" theme="dark" :disabled="payment.amount === 0"
@@ -83,11 +95,14 @@
                     {{ __("Request") }}
                   </v-btn>
                 </v-col>
+               
+
               </v-row>
             </div>
+            
           </v-window-item>
           <!-- QR Payments Tab Content -->
-          <v-window-item value="qr">
+          <!-- <v-window-item value="qr">
             <v-row class="px-1 py-0">
               <v-col cols="12" class="provider-list">
                 <v-btn
@@ -107,8 +122,9 @@
                 <p>{{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}</p>
               </v-col>
             </v-row>
-          </v-window-item>
-        </v-window>
+          </v-window-item> -->
+
+        </v-window> 
 
         <!-- Loyalty Points Redemption -->
         <v-row class="payments px-1 py-0" v-if="invoice_doc && available_points_amount > 0 && !invoice_doc.is_return">
@@ -336,6 +352,14 @@
               :no-data-text="__('Sales Person not found')" hide-details :disabled="readonly"></v-select>
           </v-col>
         </v-row>
+
+        <v-row>
+               <!--scan to pay via QR Code-->
+               <v-col cols="12" class="qr-code-display" v-if="selectedQrCode">
+                <img :src="selectedQrCode" alt="QR Code" style="max-width: 200px;" />
+                <p>{{ __('Scan to pay') }} {{ formatCurrency(invoice_doc.grand_total) }} {{ __('with') }} {{ selectedProvider }}</p>
+              </v-col>
+              </v-row>
       </div>
     </v-card>
 
@@ -467,6 +491,7 @@ export default {
       credit_due_presets: [7, 14, 30], // Preset options for due days
       customer_info: "", // Customer info
       mpesa_modes: [], // List of available M-Pesa modes
+      qr_code_providers: [], // List of QR code payment modes
       sales_persons: [], // List of sales persons
       sales_person: "", // Selected sales person
       addresses: [], // List of customer addresses
@@ -722,12 +747,15 @@ export default {
           if (r.message && r.message.qr_code_url) {
             this.selectedQrCode = r.message.qr_code_url;
             this.pollPaymentStatus(gateway, r.message.transaction_id);
+            return true;
           } else {
             frappe.msgprint(__('Failed to generate QR code for ') + gateway);
+            return false;
           }
         },
         error: (error) => {
           frappe.msgprint(__('Error: ') + error.message);
+          return false;
         }
       });
     },
@@ -930,6 +958,9 @@ export default {
           return;
         }
       }
+      
+      
+      
       // Validate paid_change
       if (this.paid_change > -this.diff_payment) {
         this.eventBus.emit("show_message", {
@@ -973,7 +1004,10 @@ export default {
         return;
       }
       // Proceed to submit the invoice
-      this.submit_invoice(print);
+      
+        this.submit_invoice(print);
+      
+      
     },
     // Submit invoice to backend after all validations
     submit_invoice(print) {
@@ -1401,10 +1435,35 @@ export default {
         },
       });
     },
+
+    //Get QR Code payment providers
+    get_qr_code_providers() {
+      const vm = this;
+      frappe.call({
+        method: "posawesome.posawesome.api.qr_payment.get_qr_code_providers",
+        args: { company: vm.pos_profile.company },
+        async: true,
+        callback: function (r) {
+          if (!r.exc) {
+            vm.qr_code_providers = r.message;
+          } else {
+            vm.qr_code_providers = [];
+          }
+        },
+      });
+    },
     // Check if payment is M-Pesa C2B
     is_mpesa_c2b_payment(payment) {
       if (this.mpesa_modes.includes(payment.mode_of_payment) && payment.type === "Bank") {
         payment.amount = 0;
+        return true;
+      } else {
+        return false;
+      }
+    },
+    is_qr_code_payment(payment) {
+      if (this.qr_code_providers.includes(payment.mode_of_payment) ) {
+      
         return true;
       } else {
         return false;
@@ -1630,6 +1689,7 @@ export default {
       this.eventBus.on("register_pos_profile", (data) => {
         this.pos_profile = data.pos_profile;
         this.get_mpesa_modes();
+        this.get_qr_code_providers();
       });
       this.eventBus.on("add_the_new_address", (data) => {
         this.addresses.push(data);

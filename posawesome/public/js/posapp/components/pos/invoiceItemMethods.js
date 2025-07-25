@@ -1144,6 +1144,7 @@ export default {
         }
 
         let invoice_doc;
+        
         if (this.invoice_doc?.doctype === "Sales Order") {
           console.log('Processing Sales Order payment');
           invoice_doc = await this.process_invoice_from_order();

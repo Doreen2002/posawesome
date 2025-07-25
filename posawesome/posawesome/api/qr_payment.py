@@ -21,7 +21,16 @@ def generate_payment_qr(provider, amount, invoice):
     img_str = base64.b64encode(buffered.getvalue()).decode()
     return f"data:image/png;base64,{img_str}"
 
-
+@frappe.whitelist()
+def get_qr_code_providers(company):
+    return frappe.get_all("Mode of Payment",
+        filters={
+            'company': company,
+            'type': 'QR Code',
+        },
+        fields=['name'],
+        pluck='name'
+    )
 
 @frappe.whitelist()
 def get_qr_code(gateway, amount, pos_invoice):
