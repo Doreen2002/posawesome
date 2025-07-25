@@ -145,6 +145,7 @@ export default {
       new_item.price_list_rate = item.rate;
       new_item.tax_rate = item.tax_rate || 0; 
       new_item.taxable = item.taxable || 0; 
+      new_item.tax_amount = ((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0);
 
       // Setup base rates properly for multi-currency
       if (this.selected_currency !== this.pos_profile.currency) {
