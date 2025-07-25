@@ -235,29 +235,30 @@ export function saveOfflineInvoice(entry) {
 }
 
 export function isOffline() {
-	if (typeof window === "undefined") {
-		// Not in a browser (SSR/Node), assume online (or handle explicitly if needed)
-		return memory.manual_offline || false;
-	}
+	return false;
+	// if (typeof window === "undefined") {
+	// 	// Not in a browser (SSR/Node), assume online (or handle explicitly if needed)
+	// 	return memory.manual_offline || false;
+	// }
 
-	const { protocol, hostname, navigator } = window;
-	const online = navigator.onLine;
+	// const { protocol, hostname, navigator } = window;
+	// const online = navigator.onLine;
 
-	const serverOnline = typeof window.serverOnline === "boolean" ? window.serverOnline : true;
+	// const serverOnline = typeof window.serverOnline === "boolean" ? window.serverOnline : true;
 
-	const isIpAddress = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(hostname);
-	const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
-	const isDnsName = !isIpAddress && !isLocalhost;
+	// const isIpAddress = /^(?:\d{1,3}\.){3}\d{1,3}$/.test(hostname);
+	// const isLocalhost = hostname === "localhost" || hostname === "127.0.0.1";
+	// const isDnsName = !isIpAddress && !isLocalhost;
 
-	if (memory.manual_offline) {
-		return true;
-	}
+	// if (memory.manual_offline) {
+	// 	return false;
+	// }
 
-	if (protocol === "https:" && isDnsName) {
-		return !online || !serverOnline;
-	}
+	// if (protocol === "https:" && isDnsName) {
+	// 	return online || serverOnline;
+	// }
 
-	return !online || !serverOnline;
+	// return online || serverOnline;
 }
 
 export function getOfflineInvoices() {

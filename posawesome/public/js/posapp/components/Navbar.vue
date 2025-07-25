@@ -66,7 +66,25 @@
             <v-icon color="primary" size="20">mdi-menu</v-icon>
             <span class="menu-header-text-compact">{{ __('Actions') }}</span>
           </div>
+
+        
+            
+
           <v-list density="compact" class="menu-list-compact">
+            <v-list-item  @click=" showmMessage(__('Opening storage cleared')); clearOpeningStorage();"
+              class="menu-item-compact primary-action">
+              <template v-slot:prepend>
+                <div class="menu-icon-wrapper-compact primary-icon">
+                  <v-icon color="white" size="16">mdi-content-save-move-outline</v-icon>
+                </div>
+              </template>
+              <div class="menu-content-compact">
+                <v-list-item-title class="menu-item-title-compact">{{ __('Clear Cache') }}</v-list-item-title>
+                <v-list-item-subtitle class="menu-item-subtitle-compact">{{ __('Clear Cache')
+                  }}</v-list-item-subtitle>
+              </div>
+            </v-list-item>
+
             <v-list-item v-if="!posProfile.posa_hide_closing_shift" @click="openCloseShift"
               class="menu-item-compact primary-action">
               <template v-slot:prepend>
@@ -80,6 +98,8 @@
                   }}</v-list-item-subtitle>
               </div>
             </v-list-item>
+
+           
 
             <v-list-item v-if="posProfile.posa_allow_print_last_invoice && lastInvoiceId" @click="printLastInvoice"
               class="menu-item-compact secondary-action">
@@ -293,6 +313,7 @@ import { io } from 'socket.io-client';
 import { getPendingOfflineInvoiceCount, syncOfflineInvoices, isOffline, getLastSyncTotals, isManualOffline, setManualOffline } from '../../offline.js';
 import OfflineInvoicesDialog from './OfflineInvoices.vue';
 import { silentPrint } from '../plugins/print.js';
+import { clearOpeningStorage } from "../../offline.js";
 
 export default {
   name: 'NavBar', // Component name
