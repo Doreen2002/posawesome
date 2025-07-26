@@ -13,7 +13,9 @@
           <v-col class="pb-0">
             <v-text-field density="compact" clearable autofocus variant="solo" color="primary"
               :label="frappe._('Search Items')" hint="Search by item code, serial number, batch no or barcode"
-              hide-details v-model="debounce_search" @keydown.esc="esc_event" @keydown.enter="search_onchange"
+              hide-details v-model="debounce_search" 
+              @keydown.esc="esc_event"
+              @keydown.enter="search_onchange"
               @click:clear="clearSearch" prepend-inner-icon="mdi-magnify" @focus="handleItemSearchFocus"
               ref="debounce_search">
               <!-- Add camera scan button if enabled -->
@@ -742,6 +744,7 @@ export default {
       this.$forceUpdate();
     },
     enter_event() {
+      console.log("Enter Event trigger:", this);
       let match = false;
       if (!this.filtered_items.length || !this.first_search) {
         return;
@@ -788,6 +791,14 @@ export default {
       if (this.flags.batch_no) {
         new_item.to_set_batch_no = this.flags.batch_no;
       }
+      const normalizedSearch = this.search?.toLowerCase();
+      if (
+        normalizedSearch === new_item.item_code?.toLowerCase() ||
+        normalizedSearch === new_item.item_name?.toLowerCase()
+      ) {
+        match = true;
+      }
+      console.log("Enter Event trigger (match):", match);
       if (match) {
         this.add_item(new_item);
         this.flags.serial_no = null;
@@ -795,11 +806,14 @@ export default {
         this.qty = 1;
         this.$refs.debounce_search.focus();
       }
+
+      console.log("Enter Event trigger Last:", new_item);
     },
     search_onchange: _.debounce(function (newSearchTerm) {
+      console.log("Search OnChange trigger:", this);
       const vm = this;
       if (newSearchTerm) vm.search = newSearchTerm;
-
+      
       if (vm.pos_profile.pose_use_limit_search) {
         vm.get_items();
       } else {
@@ -816,6 +830,7 @@ export default {
           }, 300);
         }
       }
+      console.log("Search OnChange trigger Last:", vm);
     }, 300),
     get_item_qty(first_search) {
       const qtyVal = this.qty != null ? this.qty : 1;
@@ -1086,6 +1101,40 @@ export default {
         console.warn('Scanner initialization error:', error.message);
       }
     },
+//     scan_barcode() {
+//       console.log("Scan Barcode event trigger: ", this);
+//   const vm = this;
+
+//   try {
+//     if (document._scannerAttached) return;
+
+//     onScan.attachTo(document, {
+//       suffixKeyCodes: [13], // assumes scanner ends with Enter
+//       reactToPaste: true,
+//       minLength: 3,
+//       avgTimeByChar: 30,
+//       onScan(sCode, oEvent) {
+//         console.log('Scanned barcode:', sCode);
+//         setTimeout(() => {
+//           vm.trigger_onscan(sCode);
+//         }, 300);
+//       },
+//       onScanError(oEvent) {
+//         console.warn('Scan error:', oEvent);
+//       },
+//       keyCodeMapper(oEvent) {
+//         oEvent.stopImmediatePropagation();
+//         return onScan.decodeKeyEvent(oEvent);
+//       },
+//     });
+
+//     document._scannerAttached = true;
+//     console.log('Scanner listener attached');
+//   } catch (error) {
+//     console.warn('Scanner initialization error:', error.message);
+//   }
+// },
+
     trigger_onscan(sCode) {
       if (this.filtered_items.length == 0) {
         this.eventBus.emit("show_message", {
@@ -1138,6 +1187,17 @@ export default {
       this.search = "";
       // Optionally, you might want to also clear search_backup if the behaviour should be a full reset on focus
       // this.search_backup = "";
+      //this.debounce_search = '';
+      this.focusAndSelectSearch();
+    },
+
+    focusAndSelectSearch() {
+       this.$nextTick(() => {
+        const input = this.$refs.debounce_search?.$el?.querySelector('input');
+        if (input) {
+          input.select();
+        }
+      });
     },
 
     clearQty() {

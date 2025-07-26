@@ -19,7 +19,7 @@ async function persist(key, value) {
 }
 
 self.onmessage = async (event) => {
-	console.log("item worker", event);
+	//console.log("item worker", event);
 	const data = event.data || {};
 	if (data.type === "parse_and_cache") {
 		try {
