@@ -9,9 +9,10 @@ from frappe import _
 def generate_payment_qr(provider, amount, invoice):
     # Simulate provider-specific QR data
     qr_data_map = {
+        "eSewa": f"https://esewa.com.np/pay?invoice={invoice}&amount={amount}",
         "Khalti": f"https://khalti.com/pay?invoice={invoice}&amount={amount}",
         "FonePay": f"https://fonepay.com/qr/{invoice}?amt={amount}",
-        "NepalPay": f"https://nepalpay.com/qr?inv={invoice}&amt={amount}"
+        "NepalPay": f"https://nepalpay.com/qr?inv={invoice}&amt={amount}",
     }
 
     qr_data = qr_data_map.get(provider, f"Invalid Provider")
@@ -73,6 +74,22 @@ def get_qr_code(gateway, amount, pos_invoice):
                 transaction_id = response_data.get('transaction_id')
             except Exception as e:
                 frappe.throw(_('Failed to generate Khalti QR code: ') + str(e))
+        elif gateway == 'eSewa':
+            try:
+                response = requests.post(
+                    'https://esewa.com.np/api/v1/payment/qr/',  # hypothetical URL
+                    headers={'Authorization': f'Bearer {payment_gateway.api_key}'},
+                    json={
+                        'amount': float(amount),
+                        'order_id': pos_invoice,
+                        'merchant_id': payment_gateway.merchant_id
+                    }
+                )
+                response_data = response.json()
+                qr_code_url = response_data.get('qr_code_url')
+                transaction_id = response_data.get('transaction_id')
+            except Exception as e:
+                frappe.throw(_('Failed to generate eSewa QR code: ') + str(e))
 
         elif gateway == 'Fonepay':
             try:
@@ -127,6 +144,15 @@ def check_payment_status(gateway, transaction_id):
             status = response.json().get('status', 'pending')
         except Exception as e:
             frappe.log_error(_('Fonepay payment status check failed: ') + str(e))
+    elif gateway == 'eSewa':
+        try:
+            response = requests.get(
+                f'https://esewa.com.np/api/v1/payment/status/{transaction_id}',  # hypothetical URL
+                headers={'Authorization': f'Bearer {frappe.get_value("Payment Gateway Account", {"payment_gateway": gateway}, "api_key")}'}
+            )
+            status = response.json().get('status', 'pending')
+        except Exception as e:
+            frappe.log_error(_('eSewa payment status check failed: ') + str(e))
 
     elif gateway == 'NepalPay':
         status = 'pending'  # Placeholder; implement bank-specific API call

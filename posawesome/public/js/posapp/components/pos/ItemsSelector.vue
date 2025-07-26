@@ -804,6 +804,7 @@ export default {
         this.flags.serial_no = null;
         this.flags.batch_no = null;
         this.qty = 1;
+        this.debounce_search = ""; // Clear the search input
         this.$refs.debounce_search.focus();
       }
 
