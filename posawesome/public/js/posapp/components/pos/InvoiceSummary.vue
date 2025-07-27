@@ -103,7 +103,7 @@
               {{ __('Sales Return') }}
             </v-btn>
           </v-col>
-          <v-col cols="6" v-if="pos_profile.posa_allow_print_draft_invoices">
+          <!-- <v-col cols="6" v-if="pos_profile.posa_allow_print_draft_invoices">
             <v-btn
               block
               color="primary"
@@ -113,7 +113,7 @@
             >
               {{ __('Print Draft') }}
             </v-btn>
-          </v-col>
+          </v-col> -->
           <v-col cols="12">
             <v-btn
               block

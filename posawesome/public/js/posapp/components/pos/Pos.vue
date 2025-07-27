@@ -1,4 +1,4 @@
-<template>
+<!-- <template>
   <div class="pos-main-container dynamic-container" :style="responsiveStyles">
     <ClosingDialog></ClosingDialog>
     <Drafts></Drafts>
@@ -9,7 +9,7 @@
     <Variants></Variants>
     <OpeningDialog v-if="dialog" :dialog="dialog"></OpeningDialog>
     <v-row v-show="!dialog" dense class="ma-0 dynamic-main-row">
-      <v-col v-show="!payment && !offers && !coupons" xl="5" lg="5" md="5" sm="5" cols="12" class="pos dynamic-col">
+      <v-col v-show="!payment && !offers && !coupons" xl="5" lg="4" md="5" sm="5" cols="12" class="pos dynamic-col">
         <ItemsSelector></ItemsSelector>
       </v-col>
       <v-col v-show="offers" xl="5" lg="5" md="5" sm="5" cols="12" class="pos dynamic-col">
@@ -27,7 +27,72 @@
       </v-col>
     </v-row>
   </div>
+</template> -->
+
+<template>
+  <div class="pos-main-container dynamic-container" :style="responsiveStyles">
+    <ClosingDialog></ClosingDialog>
+    <Drafts></Drafts>
+    <SalesOrders></SalesOrders>
+    <Returns></Returns>
+    <NewAddress></NewAddress>
+    <MpesaPayments></MpesaPayments>
+    <Variants></Variants>
+    <OpeningDialog v-if="dialog" :dialog="dialog"></OpeningDialog>
+    <v-row v-show="!dialog" dense class="ma-0 dynamic-main-row">
+
+      <!-- Items Selector: small size (4) -->
+      <v-col
+        v-show="!payment && !offers && !coupons"
+        xl="4" lg="4" md="4" sm="4" cols="12"
+        class="pos dynamic-col"
+      >
+        <ItemsSelector></ItemsSelector>
+      </v-col>
+
+      <!-- Offers: medium size (5) -->
+      <v-col
+        v-show="offers"
+        xl="5" lg="5" md="5" sm="5" cols="12"
+        class="pos dynamic-col"
+      >
+        <PosOffers></PosOffers>
+      </v-col>
+
+      <!-- Coupons: medium size (5) -->
+      <v-col
+        v-show="coupons"
+        xl="5" lg="5" md="5" sm="5" cols="12"
+        class="pos dynamic-col"
+      >
+        <PosCoupons></PosCoupons>
+      </v-col>
+
+      <!-- Payments: medium size (5) -->
+      <v-col
+        v-show="payment"
+        xl="5" lg="5" md="5" sm="5" cols="12"
+        class="pos dynamic-col"
+      >
+        <Payments></Payments>
+      </v-col>
+
+      <!-- Invoice: dynamic size based on what's showing -->
+      <v-col
+        :xl="(!payment && !offers && !coupons) ? 8 : 7"
+        :lg="(!payment && !offers && !coupons) ? 8 : 7"
+        :md="(!payment && !offers && !coupons) ? 8 : 7"
+        :sm="(!payment && !offers && !coupons) ? 8 : 7"
+        cols="12"
+        class="pos dynamic-col"
+      >
+        <Invoice></Invoice>
+      </v-col>
+
+    </v-row>
+  </div>
 </template>
+
 
 <script>
 
