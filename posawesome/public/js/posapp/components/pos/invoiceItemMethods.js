@@ -143,9 +143,17 @@ export default {
       new_item.discount_percentage = 0;
       new_item.discount_amount_per_item = 0;
       new_item.price_list_rate = item.rate;
+      if(item.custom_item_rate_is_tax_inclusive == 1)
+        {
+          
+          let originalRate = item.price_list_rate/ (1 + item.tax_rate / 100 )
+   
+          item.rate = originalRate;
+        }
       new_item.tax_rate = item.tax_rate || 0; 
       new_item.taxable = item.taxable || 0; 
-      new_item.tax_amount = ((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0);
+      new_item.tax_amount = (((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0)).toFixed(2);
+      
 
       // Setup base rates properly for multi-currency
       if (this.selected_currency !== this.pos_profile.currency) {
@@ -1660,6 +1668,7 @@ export default {
             item.tax_rate = data.tax_rate || 0; 
             item.taxable = data.tax_rate > 0 ? 1 : 0;
             item.tax_amount = (item.rate * item.qty) * (item.tax_rate / 100);
+            item.custom_item_rate_is_tax_inclusive = data.custom_item_rate_is_tax_inclusive
            
 
             // Calculate final amount
