@@ -362,7 +362,8 @@ def get_items(
                     if tax_template != []:
                         tax_rate  = tax_template[0].tax_rate
                 item["tax_rate"] = tax_rate
-                item["taxable"] = 1 if tax_rate > 0 else 0    
+                item["taxable"] = 1 if tax_rate > 0 else 0   
+                item['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item_code, "custom_item_rate_is_tax_inclusive") 
                 item_price = {}
                 if item_prices.get(item_code):
                     item_price = (
@@ -1181,6 +1182,7 @@ def get_items_details(pos_profile, items_data, price_list=None):
                     tax_rate  = tax_template[0].tax_rate
             item["tax_rate"] = tax_rate
             item["taxable"] = 1 if tax_rate > 0 else 0
+            item['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive") 
         item_prices_data = frappe.get_all(
             "Item Price",
             fields=["item_code", "price_list_rate", "currency", "uom"],
@@ -1367,7 +1369,7 @@ def get_item_detail(item, doc=None, warehouse=None, price_list=None):
             tax_rate  = tax_template[0].tax_rate
     res["tax_rate"] = tax_rate
     res["taxable"] = 1 if tax_rate > 0 else 0
-    
+    res['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive")
     return res
 
 
