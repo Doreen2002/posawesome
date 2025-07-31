@@ -143,15 +143,20 @@ export default {
       new_item.discount_percentage = 0;
       new_item.discount_amount_per_item = 0;
       new_item.price_list_rate = item.rate;
+      new_item.tax_rate = item.tax_rate || 0; 
+      new_item.taxable = item.taxable || 0; 
+      new_item.custom_item_rate_is_tax_inclusive  = item.custom_item_rate_is_tax_inclusive || 0
+      let originalRate = item.rate;
+
       if(item.custom_item_rate_is_tax_inclusive == 1)
         {
           
-          let originalRate = item.price_list_rate/ (1 + item.tax_rate / 100 )
-   
+          originalRate = item.price_list_rate / (1 + item.tax_rate / 100);
+          new_item.rate = originalRate;
           item.rate = originalRate;
+          
         }
-      new_item.tax_rate = item.tax_rate || 0; 
-      new_item.taxable = item.taxable || 0; 
+     
       new_item.tax_amount = (((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0)).toFixed(2);
       
 
@@ -1506,6 +1511,7 @@ export default {
             if (updated_item) {
               item.tax_rate = updated_item.tax_rate ;
               item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
+              item.custom_item_rate_is_tax_inclusive  = updated_item.custom_item_rate_is_tax_inclusive  || 0
               item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
               item.actual_qty = updated_item.actual_qty;
               item.serial_no_data = updated_item.serial_no_data;
@@ -1670,11 +1676,11 @@ export default {
             item.tax_amount = (item.rate * item.qty) * (item.tax_rate / 100);
             item.custom_item_rate_is_tax_inclusive = data.custom_item_rate_is_tax_inclusive
            
-
+            
             // Calculate final amount
             item.amount = vm.flt(item.qty * item.rate, vm.currency_precision);
             item.base_amount = vm.flt(item.qty * item.base_rate, vm.currency_precision);
-
+            console.log("amount", item.amount);
             // Log updated rates for debugging
             console.log(`Updated rates for ${item.item_code} on expand:`, {
               base_rate: item.base_rate,
