@@ -148,16 +148,23 @@ export default {
       new_item.custom_item_rate_is_tax_inclusive  = item.custom_item_rate_is_tax_inclusive || 0
       let originalRate = item.rate;
 
-      if(item.custom_item_rate_is_tax_inclusive == 1)
-        {
+      // if(item.custom_item_rate_is_tax_inclusive == 1)
+      //   {
           
-          originalRate = item.price_list_rate / (1 + item.tax_rate / 100);
-          new_item.rate = originalRate;
-          item.rate = originalRate;
+      //     originalRate = item.price_list_rate / (1 + item.tax_rate / 100);
+      //     new_item.rate = originalRate;
+      //     item.rate = item.price_list_rate;
           
-        }
-     
-      new_item.tax_amount = (((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0)).toFixed(2);
+      //   }
+      if(item.custom_item_rate_is_tax_inclusive != 1)
+      {
+        new_item.tax_amount = ((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0);
+      }
+      else
+      {
+        new_item.tax_amount  = 0;
+      }
+      
       
 
       // Setup base rates properly for multi-currency
@@ -1512,7 +1519,13 @@ export default {
               item.tax_rate = updated_item.tax_rate ;
               item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
               item.custom_item_rate_is_tax_inclusive  = updated_item.custom_item_rate_is_tax_inclusive  || 0
-              item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
+              if(item.custom_item_rate_is_tax_inclusive != 1)
+              {
+                item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
+              }
+              else{
+                item.tax_amount = 0;
+              }
               item.actual_qty = updated_item.actual_qty;
               item.serial_no_data = updated_item.serial_no_data;
               item.batch_no_data = updated_item.batch_no_data;

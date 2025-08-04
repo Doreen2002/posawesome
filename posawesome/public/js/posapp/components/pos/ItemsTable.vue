@@ -192,8 +192,8 @@
                   <div class="form-field">
                     <v-checkbox 
                       density="compact" 
-                      :label="frappe._('Taxable')" 
-                      v-model="item.taxable"
+                      :label="frappe._('Tax Inclusive')" 
+                      v-model="item.custom_item_rate_is_tax_inclusive"
                       
                       hide-details 
                       class="mt-1">

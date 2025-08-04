@@ -361,7 +361,8 @@ def get_items(
                     tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
                     if tax_template != []:
                         tax_rate  = tax_template[0].tax_rate
-                item["tax_rate"] = tax_rate
+                inclusive = frappe.db.get_value("Item", item_code, "custom_item_rate_is_tax_inclusive") 
+                item["tax_rate"] = tax_rate if inclusive != 1 else 0
                 item["taxable"] = 1 if tax_rate > 0 else 0   
                 item['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item_code, "custom_item_rate_is_tax_inclusive") 
                 item_price = {}
@@ -1180,7 +1181,8 @@ def get_items_details(pos_profile, items_data, price_list=None):
                 tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
                 if tax_template != []:
                     tax_rate  = tax_template[0].tax_rate
-            item["tax_rate"] = tax_rate
+            inclusive = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive") 
+            item["tax_rate"] = tax_rate if inclusive != 0 else 0
             item["taxable"] = 1 if tax_rate > 0 else 0
             item['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive") 
         item_prices_data = frappe.get_all(
@@ -1367,9 +1369,10 @@ def get_item_detail(item, doc=None, warehouse=None, price_list=None):
         tax_template = frappe.db.get_all ("Item Tax Template Detail",filters={"parent":item_tax[0].item_tax_template}, fields=["tax_rate"])
         if tax_template != []:
             tax_rate  = tax_template[0].tax_rate
-    res["tax_rate"] = tax_rate
+    inclusive = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive")
+    res["tax_rate"] = tax_rate if inclusive != 1 else 0
     res["taxable"] = 1 if tax_rate > 0 else 0
-    res['custom_item_rate_is_tax_inclusive'] = frappe.db.get_value("Item", item.get('item_code'), "custom_item_rate_is_tax_inclusive")
+    res['custom_item_rate_is_tax_inclusive'] = inclusive
     return res
 
 
