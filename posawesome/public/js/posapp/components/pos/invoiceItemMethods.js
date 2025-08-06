@@ -143,9 +143,9 @@ export default {
       new_item.discount_percentage = 0;
       new_item.discount_amount_per_item = 0;
       new_item.price_list_rate = item.rate;
-      new_item.tax_rate = item.tax_rate || 0; 
-      new_item.taxable = item.taxable || 0; 
-      new_item.custom_item_rate_is_tax_inclusive  = item.custom_item_rate_is_tax_inclusive || 0
+      // new_item.tax_rate = item.tax_rate || 0; 
+      // new_item.taxable = item.taxable || 0; 
+      //new_item.custom_item_rate_is_tax_inclusive  = item.custom_item_rate_is_tax_inclusive || 0
       let originalRate = item.rate;
 
       // if(item.custom_item_rate_is_tax_inclusive == 1)
@@ -156,14 +156,14 @@ export default {
       //     item.rate = item.price_list_rate;
           
       //   }
-      if(item.custom_item_rate_is_tax_inclusive != 1)
-      {
-        new_item.tax_amount = ((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0);
-      }
-      else
-      {
-        new_item.tax_amount  = 0;
-      }
+      // if(item.custom_item_rate_is_tax_inclusive != 1)
+      // {
+      //   new_item.tax_amount = ((item.rate * item.qty) * item.tax_rate/100) + (item.tax_amount || 0);
+      // }
+      // else
+      // {
+      //   new_item.tax_amount  = 0;
+      // }
       
       
 
@@ -1004,128 +1004,7 @@ export default {
       }
     },
 
-    // // Show payment dialog after validation and processing
-    // async show_payment() {
-    //   try {
-    //     console.log('Starting show_payment process');
-    //     console.log('Invoice state before payment:', {
-    //       invoiceType: this.invoiceType,
-    //       is_return: this.invoice_doc ? this.invoice_doc.is_return : false,
-    //       items_count: this.items.length,
-    //       customer: this.customer
-    //     });
-
-    //     if (!this.customer) {
-    //       console.log('Customer validation failed');
-    //       this.eventBus.emit("show_message", {
-    //         title: __(`Select a customer`),
-    //         color: "error",
-    //       });
-    //       return;
-    //     }
-
-    //     if (!this.items.length) {
-    //       console.log('Items validation failed - no items');
-    //       this.eventBus.emit("show_message", {
-    //         title: __(`Select items to sell`),
-    //         color: "error",
-    //       });
-    //       return;
-    //     }
-
-    //     console.log('Basic validations passed, proceeding to main validation');
-    //     const isValid = this.validate();
-    //     console.log('Main validation result:', isValid);
-
-    //     if (!isValid) {
-    //       console.log('Main validation failed');
-    //       return;
-    //     }
-
-    //     let invoice_doc;
-    //     if (this.invoice_doc.doctype == "Sales Order") {
-    //       console.log('Processing Sales Order payment');
-    //       invoice_doc = await this.process_invoice_from_order();
-    //     } else {
-    //       console.log('Processing regular invoice');
-    //       invoice_doc = this.process_invoice();
-    //     }
-
-    //     if (!invoice_doc) {
-    //       console.log('Failed to process invoice');
-    //       return;
-    //     }
-
-    //     // Update invoice_doc with current currency info
-    //     invoice_doc.currency = this.selected_currency || this.pos_profile.currency;
-    //     invoice_doc.conversion_rate = this.exchange_rate || 1;
-
-    //     // Update totals in invoice_doc to match current calculations
-    //     invoice_doc.total = this.Total;
-    //     invoice_doc.grand_total = this.subtotal;
-
-    //     // Apply rounding to get rounded total
-    //     invoice_doc.rounded_total = this.roundAmount(this.subtotal);
-    //     invoice_doc.base_total = this.Total * (1 / this.exchange_rate || 1);
-    //     invoice_doc.base_grand_total = this.subtotal * (1 / this.exchange_rate || 1);
-    //     invoice_doc.base_rounded_total = this.roundAmount(invoice_doc.base_grand_total);
-
-    //     // Check if this is a return invoice
-    //     if (this.isReturnInvoice || invoice_doc.is_return) {
-    //       console.log('Preparing RETURN invoice for payment with:', {
-    //         is_return: invoice_doc.is_return,
-    //         invoiceType: this.invoiceType,
-    //         return_against: invoice_doc.return_against,
-    //         items: invoice_doc.items.length,
-    //         grand_total: invoice_doc.grand_total
-    //       });
-
-    //       // For return invoices, explicitly ensure all amounts are negative
-    //       invoice_doc.is_return = 1;
-    //       if (invoice_doc.grand_total > 0) invoice_doc.grand_total = -Math.abs(invoice_doc.grand_total);
-    //       if (invoice_doc.rounded_total > 0) invoice_doc.rounded_total = -Math.abs(invoice_doc.rounded_total);
-    //       if (invoice_doc.total > 0) invoice_doc.total = -Math.abs(invoice_doc.total);
-    //       if (invoice_doc.base_grand_total > 0) invoice_doc.base_grand_total = -Math.abs(invoice_doc.base_grand_total);
-    //       if (invoice_doc.base_rounded_total > 0) invoice_doc.base_rounded_total = -Math.abs(invoice_doc.base_rounded_total);
-    //       if (invoice_doc.base_total > 0) invoice_doc.base_total = -Math.abs(invoice_doc.base_total);
-
-    //       // Ensure all items have negative quantity and amount
-    //       if (invoice_doc.items && invoice_doc.items.length) {
-    //         invoice_doc.items.forEach(item => {
-    //           if (item.qty > 0) item.qty = -Math.abs(item.qty);
-    //           if (item.stock_qty > 0) item.stock_qty = -Math.abs(item.stock_qty);
-    //           if (item.amount > 0) item.amount = -Math.abs(item.amount);
-    //         });
-    //       }
-    //     }
-
-    //     // Get payments with correct sign (positive/negative)
-    //     invoice_doc.payments = this.get_payments();
-    //     console.log('Final payment data:', invoice_doc.payments);
-
-    //     // Double-check return invoice payments are negative
-    //     if ((this.isReturnInvoice || invoice_doc.is_return) && invoice_doc.payments.length) {
-    //       invoice_doc.payments.forEach(payment => {
-    //         if (payment.amount > 0) payment.amount = -Math.abs(payment.amount);
-    //         if (payment.base_amount > 0) payment.base_amount = -Math.abs(payment.base_amount);
-    //       });
-    //       console.log('Ensured negative payment amounts for return:', invoice_doc.payments);
-    //     }
-
-    //     console.log('Showing payment dialog with currency:', invoice_doc.currency);
-    //     this.eventBus.emit("show_payment", "true");
-    //     this.eventBus.emit("send_invoice_doc_payment", invoice_doc);
-
-    //   } catch (error) {
-    //     console.error('Error in show_payment:', error);
-    //     this.eventBus.emit("show_message", {
-    //       title: __("Error processing payment"),
-    //       color: "error",
-    //       message: error.message
-    //     });
-    //   }
-    // },
-
+    // Show payment dialog after validation and processing
     async show_payment() {
       try {
         console.log('Starting show_payment process');
@@ -1133,8 +1012,7 @@ export default {
           invoiceType: this.invoiceType,
           is_return: this.invoice_doc ? this.invoice_doc.is_return : false,
           items_count: this.items.length,
-          customer: this.customer,
-          taxes: this.invoice_doc?.taxes // Log taxes for debugging
+          customer: this.customer
         });
 
         if (!this.customer) {
@@ -1165,8 +1043,7 @@ export default {
         }
 
         let invoice_doc;
-        
-        if (this.invoice_doc?.doctype === "Sales Order") {
+        if (this.invoice_doc.doctype == "Sales Order") {
           console.log('Processing Sales Order payment');
           invoice_doc = await this.process_invoice_from_order();
         } else {
@@ -1183,53 +1060,23 @@ export default {
         invoice_doc.currency = this.selected_currency || this.pos_profile.currency;
         invoice_doc.conversion_rate = this.exchange_rate || 1;
 
-        // Initialize taxes array if not present
-        invoice_doc.taxes = invoice_doc.taxes || [];
-        console.log('Taxes in invoice_doc:', invoice_doc.taxes); // Debug taxes
+        // Update totals in invoice_doc to match current calculations
+        invoice_doc.total = this.Total;
+        invoice_doc.grand_total = this.subtotal;
 
-        // Calculate totals
-        let grandTotal = this.subtotal; // Start with subtotal
-        let total = this.Total;
-
-        // Add tax amounts to grand_total if taxes exist
-        if (invoice_doc.taxes?.length) {
-          invoice_doc.taxes.forEach(tax => {
-            if (tax.tax_amount) {
-              grandTotal += flt(tax.tax_amount);
-              console.log(`Adding tax ${tax.description}: ${tax.tax_amount}`);
-            }
-          });
-        } else {
-          console.warn('No taxes found in invoice_doc.taxes');
-        }
-
-        // Update totals in invoice_doc
-        invoice_doc.total = total;
-        invoice_doc.grand_total = grandTotal;
-        invoice_doc.base_total = total * (1 / invoice_doc.conversion_rate || 1);
-        invoice_doc.base_grand_total = grandTotal * (1 / invoice_doc.conversion_rate || 1);
-
-        // Apply rounding
-        invoice_doc.rounded_total = this.roundAmount(grandTotal);
+        // Apply rounding to get rounded total
+        invoice_doc.rounded_total = this.roundAmount(this.subtotal);
+        invoice_doc.base_total = this.Total * (1 / this.exchange_rate || 1);
+        invoice_doc.base_grand_total = this.subtotal * (1 / this.exchange_rate || 1);
         invoice_doc.base_rounded_total = this.roundAmount(invoice_doc.base_grand_total);
 
-        // Calculate totals with tax (for consistency with existing fields)
-        let grandTotalWithTax = grandTotal; // Already includes taxes
-        invoice_doc.total_with_tax = this.TotalWithTax || total; // Fallback to total if TotalWithTax is undefined
-        invoice_doc.grand_total_with_tax = grandTotalWithTax;
-        invoice_doc.base_total_with_tax = invoice_doc.total_with_tax * (1 / invoice_doc.conversion_rate || 1);
-        invoice_doc.base_grand_total_with_tax = grandTotalWithTax * (1 / invoice_doc.conversion_rate || 1);
-        invoice_doc.rounded_total_with_tax = this.roundAmount(grandTotalWithTax);
-        invoice_doc.base_rounded_total_with_tax = this.roundAmount(invoice_doc.base_grand_total_with_tax);
-
         // Check if this is a return invoice
-        const isReturn = this.invoiceType === 'Return' || invoice_doc.is_return;
-        if (isReturn) {
+        if (this.isReturnInvoice || invoice_doc.is_return) {
           console.log('Preparing RETURN invoice for payment with:', {
             is_return: invoice_doc.is_return,
             invoiceType: this.invoiceType,
             return_against: invoice_doc.return_against,
-            items: invoice_doc.items?.length,
+            items: invoice_doc.items.length,
             grand_total: invoice_doc.grand_total
           });
 
@@ -1241,29 +1088,13 @@ export default {
           if (invoice_doc.base_grand_total > 0) invoice_doc.base_grand_total = -Math.abs(invoice_doc.base_grand_total);
           if (invoice_doc.base_rounded_total > 0) invoice_doc.base_rounded_total = -Math.abs(invoice_doc.base_rounded_total);
           if (invoice_doc.base_total > 0) invoice_doc.base_total = -Math.abs(invoice_doc.base_total);
-          if (invoice_doc.grand_total_with_tax > 0) invoice_doc.grand_total_with_tax = -Math.abs(invoice_doc.grand_total_with_tax);
-          if (invoice_doc.rounded_total_with_tax > 0) invoice_doc.rounded_total_with_tax = -Math.abs(invoice_doc.rounded_total_with_tax);
-          if (invoice_doc.total_with_tax > 0) invoice_doc.total_with_tax = -Math.abs(invoice_doc.total_with_tax);
-          if (invoice_doc.base_grand_total_with_tax > 0) invoice_doc.base_grand_total_with_tax = -Math.abs(invoice_doc.base_grand_total_with_tax);
-          if (invoice_doc.base_rounded_total_with_tax > 0) invoice_doc.base_rounded_total_with_tax = -Math.abs(invoice_doc.base_rounded_total_with_tax);
-          if (invoice_doc.base_total_with_tax > 0) invoice_doc.base_total_with_tax = -Math.abs(invoice_doc.base_total_with_tax);
 
           // Ensure all items have negative quantity and amount
-          if (invoice_doc.items?.length) {
+          if (invoice_doc.items && invoice_doc.items.length) {
             invoice_doc.items.forEach(item => {
               if (item.qty > 0) item.qty = -Math.abs(item.qty);
               if (item.stock_qty > 0) item.stock_qty = -Math.abs(item.stock_qty);
               if (item.amount > 0) item.amount = -Math.abs(item.amount);
-            });
-          }
-
-          // Ensure taxes have negative amounts for returns
-          if (invoice_doc.taxes?.length) {
-            invoice_doc.taxes.forEach(tax => {
-              if (tax.tax_amount > 0) tax.tax_amount = -Math.abs(tax.tax_amount);
-              if (tax.base_tax_amount > 0) tax.base_tax_amount = -Math.abs(tax.base_tax_amount);
-              if (tax.total > 0) tax.total = -Math.abs(tax.total);
-              if (tax.base_total > 0) tax.base_total = -Math.abs(tax.base_total);
             });
           }
         }
@@ -1273,26 +1104,13 @@ export default {
         console.log('Final payment data:', invoice_doc.payments);
 
         // Double-check return invoice payments are negative
-        if (isReturn && invoice_doc.payments?.length) {
+        if ((this.isReturnInvoice || invoice_doc.is_return) && invoice_doc.payments.length) {
           invoice_doc.payments.forEach(payment => {
             if (payment.amount > 0) payment.amount = -Math.abs(payment.amount);
             if (payment.base_amount > 0) payment.base_amount = -Math.abs(payment.base_amount);
           });
           console.log('Ensured negative payment amounts for return:', invoice_doc.payments);
         }
-
-        console.log('Final invoice_doc before payment dialog:', {
-          total: invoice_doc.total,
-          grand_total: invoice_doc.grand_total,
-          rounded_total: invoice_doc.rounded_total,
-          base_total: invoice_doc.base_total,
-          base_grand_total: invoice_doc.base_grand_total,
-          base_rounded_total: invoice_doc.base_rounded_total,
-          total_with_tax: invoice_doc.total_with_tax,
-          grand_total_with_tax: invoice_doc.grand_total_with_tax,
-          rounded_total_with_tax: invoice_doc.rounded_total_with_tax,
-          taxes: invoice_doc.taxes
-        });
 
         console.log('Showing payment dialog with currency:', invoice_doc.currency);
         this.eventBus.emit("show_payment", "true");
@@ -1307,6 +1125,188 @@ export default {
         });
       }
     },
+
+    // async show_payment() {
+    //   try {
+    //     console.log('Starting show_payment process');
+    //     console.log('Invoice state before payment:', {
+    //       invoiceType: this.invoiceType,
+    //       is_return: this.invoice_doc ? this.invoice_doc.is_return : false,
+    //       items_count: this.items.length,
+    //       customer: this.customer,
+    //       taxes: this.invoice_doc?.taxes // Log taxes for debugging
+    //     });
+
+    //     if (!this.customer) {
+    //       console.log('Customer validation failed');
+    //       this.eventBus.emit("show_message", {
+    //         title: __(`Select a customer`),
+    //         color: "error",
+    //       });
+    //       return;
+    //     }
+
+    //     if (!this.items.length) {
+    //       console.log('Items validation failed - no items');
+    //       this.eventBus.emit("show_message", {
+    //         title: __(`Select items to sell`),
+    //         color: "error",
+    //       });
+    //       return;
+    //     }
+
+    //     console.log('Basic validations passed, proceeding to main validation');
+    //     const isValid = this.validate();
+    //     console.log('Main validation result:', isValid);
+
+    //     if (!isValid) {
+    //       console.log('Main validation failed');
+    //       return;
+    //     }
+
+    //     let invoice_doc;
+        
+    //     if (this.invoice_doc?.doctype === "Sales Order") {
+    //       console.log('Processing Sales Order payment');
+    //       invoice_doc = await this.process_invoice_from_order();
+    //     } else {
+    //       console.log('Processing regular invoice');
+    //       invoice_doc = this.process_invoice();
+    //     }
+
+    //     if (!invoice_doc) {
+    //       console.log('Failed to process invoice');
+    //       return;
+    //     }
+
+    //     // Update invoice_doc with current currency info
+    //     invoice_doc.currency = this.selected_currency || this.pos_profile.currency;
+    //     invoice_doc.conversion_rate = this.exchange_rate || 1;
+
+    //     // Initialize taxes array if not present
+    //     invoice_doc.taxes = invoice_doc.taxes || [];
+    //     console.log('Taxes in invoice_doc:', invoice_doc.taxes); // Debug taxes
+
+    //     // Calculate totals
+    //     let grandTotal = this.subtotal; // Start with subtotal
+    //     let total = this.Total;
+
+    //     // Add tax amounts to grand_total if taxes exist
+    //     if (invoice_doc.taxes?.length) {
+    //       invoice_doc.taxes.forEach(tax => {
+    //         if (tax.tax_amount) {
+    //           grandTotal += flt(tax.tax_amount);
+    //           console.log(`Adding tax ${tax.description}: ${tax.tax_amount}`);
+    //         }
+    //       });
+    //     } else {
+    //       console.warn('No taxes found in invoice_doc.taxes');
+    //     }
+
+    //     // Update totals in invoice_doc
+    //     invoice_doc.total = total;
+    //     invoice_doc.grand_total = grandTotal;
+    //     invoice_doc.base_total = total * (1 / invoice_doc.conversion_rate || 1);
+    //     invoice_doc.base_grand_total = grandTotal * (1 / invoice_doc.conversion_rate || 1);
+
+    //     // Apply rounding
+    //     invoice_doc.rounded_total = this.roundAmount(grandTotal);
+    //     invoice_doc.base_rounded_total = this.roundAmount(invoice_doc.base_grand_total);
+
+    //     // Calculate totals with tax (for consistency with existing fields)
+    //     let grandTotalWithTax = grandTotal; // Already includes taxes
+    //     invoice_doc.total_with_tax = this.TotalWithTax || total; // Fallback to total if TotalWithTax is undefined
+    //     invoice_doc.grand_total_with_tax = grandTotalWithTax;
+    //     invoice_doc.base_total_with_tax = invoice_doc.total_with_tax * (1 / invoice_doc.conversion_rate || 1);
+    //     invoice_doc.base_grand_total_with_tax = grandTotalWithTax * (1 / invoice_doc.conversion_rate || 1);
+    //     invoice_doc.rounded_total_with_tax = this.roundAmount(grandTotalWithTax);
+    //     invoice_doc.base_rounded_total_with_tax = this.roundAmount(invoice_doc.base_grand_total_with_tax);
+
+    //     // Check if this is a return invoice
+    //     const isReturn = this.invoiceType === 'Return' || invoice_doc.is_return;
+    //     if (isReturn) {
+    //       console.log('Preparing RETURN invoice for payment with:', {
+    //         is_return: invoice_doc.is_return,
+    //         invoiceType: this.invoiceType,
+    //         return_against: invoice_doc.return_against,
+    //         items: invoice_doc.items?.length,
+    //         grand_total: invoice_doc.grand_total
+    //       });
+
+    //       // For return invoices, explicitly ensure all amounts are negative
+    //       invoice_doc.is_return = 1;
+    //       if (invoice_doc.grand_total > 0) invoice_doc.grand_total = -Math.abs(invoice_doc.grand_total);
+    //       if (invoice_doc.rounded_total > 0) invoice_doc.rounded_total = -Math.abs(invoice_doc.rounded_total);
+    //       if (invoice_doc.total > 0) invoice_doc.total = -Math.abs(invoice_doc.total);
+    //       if (invoice_doc.base_grand_total > 0) invoice_doc.base_grand_total = -Math.abs(invoice_doc.base_grand_total);
+    //       if (invoice_doc.base_rounded_total > 0) invoice_doc.base_rounded_total = -Math.abs(invoice_doc.base_rounded_total);
+    //       if (invoice_doc.base_total > 0) invoice_doc.base_total = -Math.abs(invoice_doc.base_total);
+    //       if (invoice_doc.grand_total_with_tax > 0) invoice_doc.grand_total_with_tax = -Math.abs(invoice_doc.grand_total_with_tax);
+    //       if (invoice_doc.rounded_total_with_tax > 0) invoice_doc.rounded_total_with_tax = -Math.abs(invoice_doc.rounded_total_with_tax);
+    //       if (invoice_doc.total_with_tax > 0) invoice_doc.total_with_tax = -Math.abs(invoice_doc.total_with_tax);
+    //       if (invoice_doc.base_grand_total_with_tax > 0) invoice_doc.base_grand_total_with_tax = -Math.abs(invoice_doc.base_grand_total_with_tax);
+    //       if (invoice_doc.base_rounded_total_with_tax > 0) invoice_doc.base_rounded_total_with_tax = -Math.abs(invoice_doc.base_rounded_total_with_tax);
+    //       if (invoice_doc.base_total_with_tax > 0) invoice_doc.base_total_with_tax = -Math.abs(invoice_doc.base_total_with_tax);
+
+    //       // Ensure all items have negative quantity and amount
+    //       if (invoice_doc.items?.length) {
+    //         invoice_doc.items.forEach(item => {
+    //           if (item.qty > 0) item.qty = -Math.abs(item.qty);
+    //           if (item.stock_qty > 0) item.stock_qty = -Math.abs(item.stock_qty);
+    //           if (item.amount > 0) item.amount = -Math.abs(item.amount);
+    //         });
+    //       }
+
+    //       // Ensure taxes have negative amounts for returns
+    //       if (invoice_doc.taxes?.length) {
+    //         invoice_doc.taxes.forEach(tax => {
+    //           if (tax.tax_amount > 0) tax.tax_amount = -Math.abs(tax.tax_amount);
+    //           if (tax.base_tax_amount > 0) tax.base_tax_amount = -Math.abs(tax.base_tax_amount);
+    //           if (tax.total > 0) tax.total = -Math.abs(tax.total);
+    //           if (tax.base_total > 0) tax.base_total = -Math.abs(tax.base_total);
+    //         });
+    //       }
+    //     }
+
+    //     // Get payments with correct sign (positive/negative)
+    //     invoice_doc.payments = this.get_payments();
+    //     console.log('Final payment data:', invoice_doc.payments);
+
+    //     // Double-check return invoice payments are negative
+    //     if (isReturn && invoice_doc.payments?.length) {
+    //       invoice_doc.payments.forEach(payment => {
+    //         if (payment.amount > 0) payment.amount = -Math.abs(payment.amount);
+    //         if (payment.base_amount > 0) payment.base_amount = -Math.abs(payment.base_amount);
+    //       });
+    //       console.log('Ensured negative payment amounts for return:', invoice_doc.payments);
+    //     }
+
+    //     console.log('Final invoice_doc before payment dialog:', {
+    //       total: invoice_doc.total,
+    //       grand_total: invoice_doc.grand_total,
+    //       rounded_total: invoice_doc.rounded_total,
+    //       base_total: invoice_doc.base_total,
+    //       base_grand_total: invoice_doc.base_grand_total,
+    //       base_rounded_total: invoice_doc.base_rounded_total,
+    //       total_with_tax: invoice_doc.total_with_tax,
+    //       grand_total_with_tax: invoice_doc.grand_total_with_tax,
+    //       rounded_total_with_tax: invoice_doc.rounded_total_with_tax,
+    //       taxes: invoice_doc.taxes
+    //     });
+
+    //     console.log('Showing payment dialog with currency:', invoice_doc.currency);
+    //     this.eventBus.emit("show_payment", "true");
+    //     this.eventBus.emit("send_invoice_doc_payment", invoice_doc);
+
+    //   } catch (error) {
+    //     console.error('Error in show_payment:', error);
+    //     this.eventBus.emit("show_message", {
+    //       title: __("Error processing payment"),
+    //       color: "error",
+    //       message: error.message
+    //     });
+    //   }
+    // },
     // Validate invoice before payment/submit (return logic, quantity, rates, etc)
     async validate() {
       console.log('Starting return validation');
@@ -1516,16 +1516,16 @@ export default {
               (element) => element.posa_row_id == item.posa_row_id
             );
             if (updated_item) {
-              item.tax_rate = updated_item.tax_rate ;
-              item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
-              item.custom_item_rate_is_tax_inclusive  = updated_item.custom_item_rate_is_tax_inclusive  || 0
-              if(item.custom_item_rate_is_tax_inclusive != 1)
-              {
-                item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
-              }
-              else{
-                item.tax_amount = 0;
-              }
+              // item.tax_rate = updated_item.tax_rate ;
+              // item.taxable = updated_item.tax_rate > 0 ? 1 : 0;
+              // item.custom_item_rate_is_tax_inclusive  = updated_item.custom_item_rate_is_tax_inclusive  || 0
+              // if(item.custom_item_rate_is_tax_inclusive != 1)
+              // {
+              //   item.tax_amount = (item.rate * item.qty ) * (item.tax_rate / 100);
+              // }
+              // else{
+              //   item.tax_amount = 0;
+              // }
               item.actual_qty = updated_item.actual_qty;
               item.serial_no_data = updated_item.serial_no_data;
               item.batch_no_data = updated_item.batch_no_data;
@@ -1684,10 +1684,10 @@ export default {
             item.stock_uom = data.stock_uom;
             item.has_serial_no = data.has_serial_no;
             item.has_batch_no = data.has_batch_no;
-            item.tax_rate = data.tax_rate || 0; 
-            item.taxable = data.tax_rate > 0 ? 1 : 0;
-            item.tax_amount = (item.rate * item.qty) * (item.tax_rate / 100);
-            item.custom_item_rate_is_tax_inclusive = data.custom_item_rate_is_tax_inclusive
+            // item.tax_rate = data.tax_rate || 0; 
+            // item.taxable = data.tax_rate > 0 ? 1 : 0;
+            // item.tax_amount = (item.rate * item.qty) * (item.tax_rate / 100);
+            //item.custom_item_rate_is_tax_inclusive = data.custom_item_rate_is_tax_inclusive
            
             
             // Calculate final amount

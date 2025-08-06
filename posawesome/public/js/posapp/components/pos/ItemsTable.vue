@@ -186,7 +186,7 @@
               </div>
 
               <!-- Taxable row of fields -->
-                <div class="form-section">
+                <!-- <div class="form-section">
                 <div class="form-row">
                   
                   <div class="form-field">
@@ -209,7 +209,7 @@
                   </div>
 
                 </div>
-              </div>
+              </div> -->
 
 
               <!-- Serial Number Section -->
