@@ -36,6 +36,7 @@ frappe.pages['posapp'].on_page_load = function (wrapper) {
 					fieldname: 'posa_tax_inclusive'
 				},
 				callback: function(response) {
+					debugger;
 					if (response.message !== undefined) {
 						const posa_tax_inclusive = response.message;
 						const totalAmountField = document.getElementById('input-v-25');

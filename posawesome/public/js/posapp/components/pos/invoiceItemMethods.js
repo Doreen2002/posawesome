@@ -973,23 +973,30 @@ export default {
       return this.invoice_doc;
     },
 
-    // Process and save invoice (handles update or create)
     process_invoice() {
-      const doc = this.get_invoice_doc();
-      try {
-        const updated_doc = this.update_invoice(doc);
-        if (updated_doc && updated_doc.posting_date) {
-          this.posting_date = this.formatDateForBackend(updated_doc.posting_date);
+        const doc = this.get_invoice_doc();
+
+        try {
+            // If we've already processed this invoice once in this POS session,
+            // skip backend recalculation of totals/taxes to prevent inclusive → exclusive switch
+            if (this.invoice_doc && this.invoice_doc.items && this.invoice_doc.items.length) {
+                doc._skip_set_missing_values = true;
+            }
+
+            const updated_doc = this.update_invoice(doc);
+
+            if (updated_doc && updated_doc.posting_date) {
+                this.posting_date = this.formatDateForBackend(updated_doc.posting_date);
+            }
+            return updated_doc;
+        } catch (error) {
+            console.error('Error in process_invoice:', error);
+            this.eventBus.emit('show_message', {
+                title: __(error.message || 'Error processing invoice'),
+                color: 'error'
+            });
+            return false;
         }
-        return updated_doc;
-      } catch (error) {
-        console.error('Error in process_invoice:', error);
-        this.eventBus.emit('show_message', {
-          title: __(error.message || 'Error processing invoice'),
-          color: 'error'
-        });
-        return false;
-      }
     },
 
     // Process and save invoice from order
@@ -1003,129 +1010,158 @@ export default {
         return this.update_invoice_from_order(doc);
       }
     },
-
+  /// Default
     // Show payment dialog after validation and processing
-    async show_payment() {
-      try {
-        console.log('Starting show_payment process');
-        console.log('Invoice state before payment:', {
-          invoiceType: this.invoiceType,
-          is_return: this.invoice_doc ? this.invoice_doc.is_return : false,
-          items_count: this.items.length,
-          customer: this.customer
-        });
+  async show_payment() {
+		try {
+      this.invoice_doc = JSON.parse(JSON.stringify(this.get_invoice_doc()));
+      
+			console.log("Starting show_payment process");
+			console.log("Invoice state before payment:", {
+				invoiceType: this.invoiceType,
+				is_return: this.invoice_doc ? this.invoice_doc.is_return : false,
+				items_count: this.items.length,
+				customer: this.customer,
+			});
 
-        if (!this.customer) {
-          console.log('Customer validation failed');
-          this.eventBus.emit("show_message", {
-            title: __(`Select a customer`),
-            color: "error",
-          });
-          return;
-        }
+			if (!this.customer) {
+				console.log("Customer validation failed");
+				this.eventBus.emit("show_message", {
+					title: __(`Select a customer`),
+					color: "error",
+				});
+				return;
+			}
 
-        if (!this.items.length) {
-          console.log('Items validation failed - no items');
-          this.eventBus.emit("show_message", {
-            title: __(`Select items to sell`),
-            color: "error",
-          });
-          return;
-        }
+			if (!this.items.length) {
+				console.log("Items validation failed - no items");
+				this.eventBus.emit("show_message", {
+					title: __(`Select items to sell`),
+					color: "error",
+				});
+				return;
+			}
 
-        console.log('Basic validations passed, proceeding to main validation');
-        const isValid = this.validate();
-        console.log('Main validation result:', isValid);
+			console.log("Basic validations passed, proceeding to main validation");
+			const isValid = this.validate();
+			console.log("Main validation result:", isValid);
 
-        if (!isValid) {
-          console.log('Main validation failed');
-          return;
-        }
+			if (!isValid) {
+				console.log("Main validation failed");
+				return;
+			}
 
-        let invoice_doc;
-        if (this.invoice_doc.doctype == "Sales Order") {
-          console.log('Processing Sales Order payment');
-          invoice_doc = await this.process_invoice_from_order();
-        } else {
-          console.log('Processing regular invoice');
-          invoice_doc = this.process_invoice();
-        }
+			let invoice_doc;
+			if (
+				this.invoiceType === "Order" &&
+				this.pos_profile.posa_create_only_sales_order &&
+				!this.new_delivery_date &&
+				!this.invoice_doc.posa_delivery_date
+			) {
+				console.log("Building local Sales Order doc for payment");
+				invoice_doc = this.get_invoice_doc();
+			} else if (this.invoice_doc.doctype == "Sales Order" && this.invoiceType === "Invoice") {
+				console.log("Processing Sales Order payment");
+				invoice_doc = await this.process_invoice_from_order();
+			} else {
+				console.log("Processing regular invoice");
+				invoice_doc = this.process_invoice();
+			}
 
-        if (!invoice_doc) {
-          console.log('Failed to process invoice');
-          return;
-        }
+			if (!invoice_doc) {
+				console.log("Failed to process invoice");
+				return;
+			}
 
-        // Update invoice_doc with current currency info
-        invoice_doc.currency = this.selected_currency || this.pos_profile.currency;
-        invoice_doc.conversion_rate = this.exchange_rate || 1;
+			// Update invoice_doc with current currency info
+			invoice_doc.currency = this.selected_currency || this.pos_profile.currency;
+			invoice_doc.conversion_rate = this.conversion_rate || 1;
+			invoice_doc.plc_conversion_rate = this.exchange_rate || 1;
 
-        // Update totals in invoice_doc to match current calculations
-        invoice_doc.total = this.Total;
-        invoice_doc.grand_total = this.subtotal;
+			// Preserve totals calculated on the server to ensure taxes are included
+			// The process_invoice method already updates the invoice with taxes and
+			// totals via the backend. Overriding those values here caused the
+			// payment dialog to display amounts without taxes applied. Simply use
+			// the values returned from the server instead of recalculating them on
+			// the client side.
 
-        // Apply rounding to get rounded total
-        invoice_doc.rounded_total = this.roundAmount(this.subtotal);
-        invoice_doc.base_total = this.Total * (1 / this.exchange_rate || 1);
-        invoice_doc.base_grand_total = this.subtotal * (1 / this.exchange_rate || 1);
-        invoice_doc.base_rounded_total = this.roundAmount(invoice_doc.base_grand_total);
+			// Update totals on the client has been disabled. The original code is
+			// kept below for reference and is intentionally commented out to avoid
+			// overriding the server calculated values.
+			// invoice_doc.total = this.Total;
+			// invoice_doc.grand_total = this.subtotal;
 
-        // Check if this is a return invoice
-        if (this.isReturnInvoice || invoice_doc.is_return) {
-          console.log('Preparing RETURN invoice for payment with:', {
-            is_return: invoice_doc.is_return,
-            invoiceType: this.invoiceType,
-            return_against: invoice_doc.return_against,
-            items: invoice_doc.items.length,
-            grand_total: invoice_doc.grand_total
-          });
+			// if (this.pos_profile.disable_rounded_total) {
+			//   invoice_doc.rounded_total = flt(this.subtotal, this.currency_precision);
+			// } else {
+			//   invoice_doc.rounded_total = this.roundAmount(this.subtotal);
+			// }
+			// invoice_doc.base_total = this.Total * (1 / this.exchange_rate || 1);
+			// invoice_doc.base_grand_total = this.subtotal * (1 / this.exchange_rate || 1);
+			// if (this.pos_profile.disable_rounded_total) {
+			//   invoice_doc.base_rounded_total = flt(invoice_doc.base_grand_total, this.currency_precision);
+			// } else {
+			//   invoice_doc.base_rounded_total = this.roundAmount(invoice_doc.base_grand_total);
+			// }
 
-          // For return invoices, explicitly ensure all amounts are negative
-          invoice_doc.is_return = 1;
-          if (invoice_doc.grand_total > 0) invoice_doc.grand_total = -Math.abs(invoice_doc.grand_total);
-          if (invoice_doc.rounded_total > 0) invoice_doc.rounded_total = -Math.abs(invoice_doc.rounded_total);
-          if (invoice_doc.total > 0) invoice_doc.total = -Math.abs(invoice_doc.total);
-          if (invoice_doc.base_grand_total > 0) invoice_doc.base_grand_total = -Math.abs(invoice_doc.base_grand_total);
-          if (invoice_doc.base_rounded_total > 0) invoice_doc.base_rounded_total = -Math.abs(invoice_doc.base_rounded_total);
-          if (invoice_doc.base_total > 0) invoice_doc.base_total = -Math.abs(invoice_doc.base_total);
+			// Check if this is a return invoice
+			if (this.isReturnInvoice || invoice_doc.is_return) {
+				console.log("Preparing RETURN invoice for payment with:", {
+					is_return: invoice_doc.is_return,
+					invoiceType: this.invoiceType,
+					return_against: invoice_doc.return_against,
+					items: invoice_doc.items.length,
+					grand_total: invoice_doc.grand_total,
+				});
 
-          // Ensure all items have negative quantity and amount
-          if (invoice_doc.items && invoice_doc.items.length) {
-            invoice_doc.items.forEach(item => {
-              if (item.qty > 0) item.qty = -Math.abs(item.qty);
-              if (item.stock_qty > 0) item.stock_qty = -Math.abs(item.stock_qty);
-              if (item.amount > 0) item.amount = -Math.abs(item.amount);
-            });
-          }
-        }
+				// For return invoices, explicitly ensure all amounts are negative
+				invoice_doc.is_return = 1;
+				if (invoice_doc.grand_total > 0) invoice_doc.grand_total = -Math.abs(invoice_doc.grand_total);
+				if (invoice_doc.rounded_total > 0)
+					invoice_doc.rounded_total = -Math.abs(invoice_doc.rounded_total);
+				if (invoice_doc.total > 0) invoice_doc.total = -Math.abs(invoice_doc.total);
+				if (invoice_doc.base_grand_total > 0)
+					invoice_doc.base_grand_total = -Math.abs(invoice_doc.base_grand_total);
+				if (invoice_doc.base_rounded_total > 0)
+					invoice_doc.base_rounded_total = -Math.abs(invoice_doc.base_rounded_total);
+				if (invoice_doc.base_total > 0) invoice_doc.base_total = -Math.abs(invoice_doc.base_total);
 
-        // Get payments with correct sign (positive/negative)
-        invoice_doc.payments = this.get_payments();
-        console.log('Final payment data:', invoice_doc.payments);
+				// Ensure all items have negative quantity and amount
+				if (invoice_doc.items && invoice_doc.items.length) {
+					invoice_doc.items.forEach((item) => {
+						if (item.qty > 0) item.qty = -Math.abs(item.qty);
+						if (item.stock_qty > 0) item.stock_qty = -Math.abs(item.stock_qty);
+						if (item.amount > 0) item.amount = -Math.abs(item.amount);
+					});
+				}
+			}
 
-        // Double-check return invoice payments are negative
-        if ((this.isReturnInvoice || invoice_doc.is_return) && invoice_doc.payments.length) {
-          invoice_doc.payments.forEach(payment => {
-            if (payment.amount > 0) payment.amount = -Math.abs(payment.amount);
-            if (payment.base_amount > 0) payment.base_amount = -Math.abs(payment.base_amount);
-          });
-          console.log('Ensured negative payment amounts for return:', invoice_doc.payments);
-        }
+			// Get payments with correct sign (positive/negative)
+			invoice_doc.payments = this.get_payments();
+			console.log("Final payment data:", invoice_doc.payments);
 
-        console.log('Showing payment dialog with currency:', invoice_doc.currency);
-        this.eventBus.emit("show_payment", "true");
-        this.eventBus.emit("send_invoice_doc_payment", invoice_doc);
+			// Double-check return invoice payments are negative
+			if ((this.isReturnInvoice || invoice_doc.is_return) && invoice_doc.payments.length) {
+				invoice_doc.payments.forEach((payment) => {
+					if (payment.amount > 0) payment.amount = -Math.abs(payment.amount);
+					if (payment.base_amount > 0) payment.base_amount = -Math.abs(payment.base_amount);
+				});
+				console.log("Ensured negative payment amounts for return:", invoice_doc.payments);
+			}
 
-      } catch (error) {
-        console.error('Error in show_payment:', error);
-        this.eventBus.emit("show_message", {
-          title: __("Error processing payment"),
-          color: "error",
-          message: error.message
-        });
-      }
-    },
-
+			console.log("Showing payment dialog with currency:", invoice_doc.currency);
+			this.eventBus.emit("show_payment", "true");
+			this.eventBus.emit("send_invoice_doc_payment", invoice_doc);
+		} catch (error) {
+			console.error("Error in show_payment:", error);
+			this.eventBus.emit("show_message", {
+				title: __("Error processing payment"),
+				color: "error",
+				message: error.message,
+			});
+		}
+	},
+    /// Customize
     // async show_payment() {
     //   try {
     //     console.log('Starting show_payment process');
@@ -1307,6 +1343,9 @@ export default {
     //     });
     //   }
     // },
+ 
+
+
     // Validate invoice before payment/submit (return logic, quantity, rates, etc)
     async validate() {
       console.log('Starting return validation');

@@ -752,6 +752,28 @@ def update_invoice(data):
             # Update data to be sent back to frontend
             data["conversion_rate"] = exchange_rate
             data["plc_conversion_rate"] = exchange_rate
+    
+    allow_zero_rated_items = frappe.get_cached_value(
+        "POS Profile", invoice_doc.pos_profile, "posa_allow_zero_rated_items"
+    )
+    for item in invoice_doc.items:
+        if not item.rate or item.rate == 0:
+            if allow_zero_rated_items:
+                item.price_list_rate = 0.00
+                item.is_free_item = 1
+            else:
+                frappe.throw(_("Rate cannot be zero for item {0}").format(item.item_code))
+        else:
+            item.is_free_item = 0
+
+        add_taxes_from_tax_template(item, invoice_doc)
+
+    if frappe.get_cached_value(
+        "POS Profile", invoice_doc.pos_profile, "posa_tax_inclusive"
+    ):
+        if invoice_doc.get("taxes"):
+            for tax in invoice_doc.taxes:
+                tax.included_in_print_rate = 1
 
     invoice_doc.flags.ignore_permissions = True
     frappe.flags.ignore_account_permission = True
@@ -763,6 +785,8 @@ def update_invoice(data):
     response["conversion_rate"] = invoice_doc.conversion_rate
     response["plc_conversion_rate"] = invoice_doc.conversion_rate
     return response
+
+
 
 
 @frappe.whitelist()

@@ -33,7 +33,7 @@
         <div class="currency-display">
         
           <span class="currency-symbol">{{ currencySymbol(displayCurrency) }}</span>
-          <span class="amount-value">{{ formatCurrency(item.qty * item.rate + (item.tax_amount || 0)) }}</span>
+          <span class="amount-value">{{ formatCurrency(item.qty * item.rate) }}</span>
         </div>
       </template>
 
