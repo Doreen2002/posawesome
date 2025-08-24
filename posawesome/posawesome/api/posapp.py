@@ -270,14 +270,14 @@ def get_items(
             condition += " AND has_variants = 0"
 
         result = []
-        allowed_companies = frappe.db.get_list(
-            "User Permission",
-            filters={"user": frappe.session.user, "allow": "Company"},
-            fields=["for_value"]
-        )
-        allowed_company_names = [c["for_value"] for c in allowed_companies]
+        # allowed_companies = frappe.db.get_list(
+        #     "User Permission",
+        #     filters={"user": frappe.session.user, "allow": "Company"},
+        #     fields=["for_value"]
+        # )
+        # allowed_company_names = [c["for_value"] for c in allowed_companies]
         tax_rate = 0
-        taxable = 0
+        # taxable = 0
         
         
 

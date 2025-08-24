@@ -144,13 +144,13 @@
 
         <!-- Invoice Totals (Net, Tax, Total, Discount, Grand, Rounded) -->
         <v-row class="px-1 py-0">
-          <v-col cols="6">
+          <!-- <v-col cols="6">
             <v-text-field density="compact" variant="outlined" color="primary" :label="frappe._('Net Total')"
               :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field"
               :value="formatCurrency(invoice_doc.net_total, displayCurrency)" readonly :prefix="currencySymbol()"
               persistent-placeholder></v-text-field>
-          </v-col>
-          <v-col cols="6">
+          </v-col> -->
+          <!-- <v-col cols="6">
             <v-text-field density="compact" variant="outlined" color="primary" :label="frappe._('Tax and Charges')"
               :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field" hide-details
               :value="formatCurrency(invoice_doc.total_taxes_and_charges, displayCurrency)" readonly
@@ -167,7 +167,7 @@
               :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field" hide-details
               :value="formatCurrency(diff_payment, displayCurrency)" readonly :prefix="currencySymbol()"
               persistent-placeholder></v-text-field>
-          </v-col>
+          </v-col> -->
           <v-col cols="6">
             <v-text-field density="compact" variant="outlined" color="primary" :label="frappe._('Discount Amount')"
               :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field" hide-details
@@ -180,18 +180,18 @@
               :value="formatCurrency(invoice_doc.grand_total)" readonly :prefix="currencySymbol(invoice_doc.currency)"
               persistent-placeholder></v-text-field>
           </v-col>
-          <v-col v-if="invoice_doc.rounded_total" cols="6">
+          <!-- <v-col v-if="invoice_doc.rounded_total" cols="6">
             <v-text-field density="compact" variant="outlined" color="primary" :label="frappe._('Rounded Total')"
               :bg-color="isDarkTheme ? '#1E1E1E' : 'white'" class="dark-field" hide-details
               :value="formatCurrency(invoice_doc.rounded_total)" readonly :prefix="currencySymbol(invoice_doc.currency)"
               persistent-placeholder></v-text-field>
-          </v-col>
+          </v-col> -->
 
           <!-- Delivery Date and Address (if applicable) -->
-          <v-col cols="6" v-if="pos_profile.posa_allow_sales_order && invoiceType === 'Order'">
+          <!-- <v-col cols="6" v-if="pos_profile.posa_allow_sales_order && invoiceType === 'Order'">
             <VueDatePicker v-model="new_delivery_date" model-type="format" format="dd-MM-yyyy" :min-date="new Date()"
               auto-apply :dark="isDarkTheme" @update:model-value="update_delivery_date()" />
-          </v-col>
+          </v-col> -->
           <!-- Shipping Address Selection (if delivery date is set) -->
           <v-col cols="12" v-if="invoice_doc.posa_delivery_date">
             <v-autocomplete density="compact" clearable auto-select-first variant="outlined" color="primary"
@@ -1010,6 +1010,7 @@ export default {
     },
     // Submit invoice to backend after all validations
     submit_invoice(print) {
+      console.log("Invoice Doc Test: ", this.invoice_doc)
       // For return invoices, ensure payments are negative one last time
       if (this.invoice_doc.is_return) {
         this.ensureReturnPaymentsAreNegative();
